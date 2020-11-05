@@ -1,17 +1,23 @@
 import express from 'express'
 import BodyParser from 'body-parser'
+import { LogRequest } from './middlewares/logging'
+import transactionRouter from './routers/transaction'
 
 const app = express()
 
-const PORT = process.env.NODE_ENV === 'development' ? 5000 : 80
+const env = process.env.NODE_ENV
+const PORT = env === 'development' ? 5000 : 80
 
 app.use(BodyParser.json())
 
+// Middlewares
+app.use(LogRequest)
 
-
+// Routers
+app.use('/transaction', transactionRouter)
 
 app.listen(PORT, () => {
-    console.log(`[ INFO ] App is ready @ ${PORT}`)
+    console.log(`[ INFO ] App is ready @ ${PORT} in ${env} mode`)
 })
 
 // Express has problems w/ SIGINT
