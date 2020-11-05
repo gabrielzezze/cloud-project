@@ -17,6 +17,7 @@ class Frontend():
             'zezze-frontend-1'
         ]
     
+
     def _destroy_previous_env(self):
 
         load_balancer_deleted_waiter = self.elb_client.get_waiter('load_balancers_deleted')
@@ -40,13 +41,16 @@ class Frontend():
         deleted_instances_ids = delete_ec2_instances_by_group(self.ec2_client, 'frontend')
         if len(deleted_instances_ids) != 0:
             termination_waiter.wait(InstanceIds=deleted_instances_ids)
+        
+        # Delete security group
+        name = get_frontend_security_group_name()
+        delete_security_group_by_name(self.aws_client, name)
 
 
     def _handle_frontend_security_group(self):
-        name = get_frontend_security_group_name()
-        delete_security_group_by_name(self.aws_client, name)
         sg_id = handle_security_group_creation(self.aws_client, 'frontend')
         self.security_group_id = sg_id
+
 
     def _handle_frontend_ec2_instances(self):
 
@@ -57,6 +61,7 @@ class Frontend():
         
         self.ec2_instances = instances_ids
     
+
     def _handle_frontend_load_balancer(self):
         running_waiter = self.aws_client.get_waiter('instance_running')
 
@@ -95,6 +100,7 @@ class Frontend():
         )
 
         self.load_balancer_arn = lb_arn
+
 
     def __call__(self):
         print('Init Fronend Deploy')

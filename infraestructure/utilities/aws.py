@@ -22,9 +22,9 @@ def init_aws_client(type: str):
 
 
 def handle_security_group_creation(aws_client, type):
-    ec2_client = boto3.resource('ec2', region_name='us-east-1')
 
     if type == 'frontend':
+        ec2_client = boto3.resource('ec2', region_name='us-east-1')
         sg_name = aws_contants.get_frontend_security_group_name()
         
         security_group = create_security_group(ec2_client, sg_name, 'FrontEnd Security Group')
@@ -32,6 +32,12 @@ def handle_security_group_creation(aws_client, type):
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=8080, ToPort=8080)
 
         return security_group.id
+    
+    elif type == 'backend':
+        ec2_client = boto3.resource('ec2', region_name='us-east-2')
+        sg_name = aws_contants.get_backend_security_group_name()
+        
+        security_group = create_security_group(ec2_client, sg_name, 'Backend Security Group')
 
 
 def handle_ec2_instance_creation(aws_client, name, sg_id, type):

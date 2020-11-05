@@ -6,7 +6,7 @@ import transactionRouter from './routers/transaction'
 const app = express()
 
 const env = process.env.NODE_ENV
-const PORT = env === 'development' ? 5000 : 80
+const PORT = env === 'development' ? 5001 : 5000
 
 app.use(BodyParser.json())
 
