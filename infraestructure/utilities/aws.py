@@ -36,8 +36,12 @@ def handle_security_group_creation(aws_client, type):
     elif type == 'backend':
         ec2_client = boto3.resource('ec2', region_name='us-east-2')
         sg_name = aws_contants.get_backend_security_group_name()
-        
+
         security_group = create_security_group(ec2_client, sg_name, 'Backend Security Group')
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=5000, ToPort=5000)
+        
+        return security_group.id
 
 
 def handle_ec2_instance_creation(aws_client, name, sg_id, type):
