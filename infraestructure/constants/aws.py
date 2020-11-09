@@ -22,3 +22,7 @@ def get_frontend_lb_target_group_name() -> str:
 BACKEND_SECURITY_GROUP_NAME = "zezze-backend-security-group"
 def get_backend_security_group_name():
     return BACKEND_SECURITY_GROUP_NAME
+
+BACKEND_IMAGE_ID = "ami-027d711a2459d7406"
+def get_backend_image_id():
+    return BACKEND_IMAGE_ID

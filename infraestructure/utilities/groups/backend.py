@@ -30,3 +30,24 @@ class Backend():
     def _handle_security_group(self):
         sg_id = handle_security_group_creation(self.aws_client, 'backend')
         self.security_group_id = sg_id
+    
+    def _handle_ec2_instance(self):
+        instances_ids = []
+        name = self.BACKEND_MACHINES_NAMES[0]
+
+        instance_id = handle_ec2_instance_creation(self.aws_client, name, self.security_group_id, 'backend')
+        instances_ids.append({ 'Id': instance_id })
+
+        self.ec2_instances = instances_ids
+    
+
+    def __call__(self):
+        print('Destroing previous env...')
+        self._destroy_previous_env()
+
+        print('Create Security Group...')
+        self._handle_security_group()
+
+        print('Creating EC2 insances...')
+        self._handle_ec2_instance()
+

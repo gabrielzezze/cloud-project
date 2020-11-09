@@ -8,13 +8,14 @@ from utilities.aws_resources.listener import create_listener
 import constants.aws as aws_contants
 
 
-def init_aws_client(type: str):
+def init_aws_client(type: str, region: str):
 
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
     client = boto3.client(
         type,
+        region_name=region,
         aws_access_key_id = AWS_ACCESS_KEY_ID,
         aws_secret_access_key = AWS_SECRET_ACCESS_KEY
     )
@@ -50,6 +51,13 @@ def handle_ec2_instance_creation(aws_client, name, sg_id, type):
 
         image_id = aws_contants.get_frontend_image_id()
 
+        instance_id = create_ec2_instance(ec2_client, name, sg_id, image_id, type)
+        return instance_id
+    
+    elif type == 'backend':
+        ec2_client = boto3.resource('ec2', region_name='us-east-2')
+        
+        image_id = aws_contants.get_backend_image_id()
         instance_id = create_ec2_instance(ec2_client, name, sg_id, image_id, type)
         return instance_id
 
