@@ -1,5 +1,5 @@
 # Frontend Names
-FRONTEND_IMAGE_ID = "ami-03d511b6442b6bc89"
+FRONTEND_IMAGE_ID = "ami-047056bb387ad7173"
 def get_frontend_image_id() -> str:
     return FRONTEND_IMAGE_ID
 

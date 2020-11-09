@@ -1,7 +1,10 @@
 def delete_security_group_by_name(aws_client, name):
-    security_groups = aws_client.describe_security_groups(
-        GroupNames=[name]
-    ).get('SecurityGroups', [])
+    try:
+        security_groups = aws_client.describe_security_groups(
+            GroupNames=[name]
+        ).get('SecurityGroups', [])
+    except:
+        security_groups = []
 
     if len(security_groups) == 0:
         return None
