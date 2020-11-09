@@ -26,3 +26,7 @@ def get_backend_security_group_name():
 BACKEND_IMAGE_ID = "ami-027d711a2459d7406"
 def get_backend_image_id():
     return BACKEND_IMAGE_ID
+
+BACKEND_ELASTIC_IP_ALLOC_ID = "eipalloc-0383a09bbaf5d3687"
+def get_elastic_ip_alloc_id():
+    return BACKEND_ELASTIC_IP_ALLOC_ID

@@ -1,7 +1,7 @@
 from ..aws import handle_ec2_instance_creation, handle_security_group_creation
 from utilities.aws_resources.ec2 import delete_ec2_instances_by_group
 from utilities.aws_resources.security_group import delete_security_group_by_name
-from constants.aws import get_backend_security_group_name
+from constants.aws import get_backend_security_group_name, get_elastic_ip_alloc_id
 
 class Backend():
     def __init__(self, aws_client, ec2_client):
@@ -40,6 +40,15 @@ class Backend():
 
         self.ec2_instances = instances_ids
     
+    def _handle_elastic_ip_association(self):
+        instance_id = self.ec2_instances[0].get('Id', None)
+        allocation_id = get_elastic_ip_alloc_id()
+        if instance_id is not None:
+            self.aws_client.associate_address(
+                InstanceId = instance_id,
+                AllocationId = "eipalloc-0383a09bbaf5d3687"
+            )
+    
 
     def __call__(self):
         print('Destroing previous env...')
@@ -50,4 +59,11 @@ class Backend():
 
         print('Creating EC2 insances...')
         self._handle_ec2_instance()
+        
+        print('Waiting for instances...')
+        running_waiter = self.aws_client.get_waiter('instance_running')
+        running_waiter.wait(InstanceIds=[instance.get('Id', None) for instance in self.ec2_instances])
+        
+        print('Association Elastic IP...')
+        self._handle_elastic_ip_association()
 
