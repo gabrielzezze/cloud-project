@@ -17,6 +17,13 @@ FRONTEND_TARGET_GROUP_NAME = "zezze-frontend-lb-target-group"
 def get_frontend_lb_target_group_name() -> str:
     return FRONTEND_TARGET_GROUP_NAME
 
+FRONTEND_LAUNCH_CONFIG_NAME = "zezze-frontend-launch-config"
+def get_frontend_launch_config_name() -> str:
+    return FRONTEND_LAUNCH_CONFIG_NAME
+
+FRONTEND_AUTO_SCALING_GROUP_NAME = "zezze-frontend-as-group"
+def get_frontend_auto_scaling_group_name() -> str:
+    return FRONTEND_AUTO_SCALING_GROUP_NAME
 
 # Backend names
 BACKEND_SECURITY_GROUP_NAME = "zezze-backend-security-group"

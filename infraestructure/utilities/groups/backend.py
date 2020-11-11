@@ -45,10 +45,12 @@ class Backend():
         allocation_id = get_elastic_ip_alloc_id()
         if instance_id is not None:
             self.aws_client.associate_address(
-                InstanceId = instance_id,
+                InstanceId   = instance_id,
                 AllocationId = "eipalloc-0383a09bbaf5d3687"
             )
     
+    def _handler_auto_scalling(self):
+        pass
 
     def __call__(self):
         print('Destroing previous env...')

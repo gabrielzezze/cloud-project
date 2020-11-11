@@ -5,6 +5,8 @@ from utilities.aws_resources.ec2 import create_ec2_instance
 from utilities.aws_resources.load_balancer import create_load_balancer_instance
 from utilities.aws_resources.target_group import create_target_group
 from utilities.aws_resources.listener import create_listener
+from utilities.aws_resources.launch_configuration import create_launch_configuration
+from utilities.aws_resources.auto_scaling_group import create_auto_scaling_group
 import constants.aws as aws_contants
 
 
@@ -60,6 +62,36 @@ def handle_ec2_instance_creation(aws_client, name, sg_id, type):
         image_id = aws_contants.get_backend_image_id()
         instance_id = create_ec2_instance(ec2_client, name, sg_id, image_id, type)
         return instance_id
+
+
+def handle_launch_configuration_creation(as_client, name, sg_id, type):
+    if type == 'frontend':
+        image_id = aws_contants.get_frontend_image_id()
+        key_name = 'zezze_key'
+        security_groups_ids = [sg_id]
+
+        create_launch_configuration(
+            as_client,
+            name,
+            image_id,
+            key_name,
+            security_groups_ids
+        )
+
+
+def handle_auto_scaling_group_creation(as_client, name, target_groups_arns, subnets_ids, type):
+    if type == 'frontend':
+        launch_config_name = aws_contants.get_frontend_launch_config_name()
+
+        create_auto_scaling_group(
+            as_client,
+            name,
+            launch_config_name,
+            target_groups_arns,
+            2,
+            subnets_ids,
+            type
+        )
 
 
 def handle_load_balancer_creation(elb_client, name, subnets, sg_id, type):
