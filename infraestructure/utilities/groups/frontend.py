@@ -1,12 +1,17 @@
-# from ..aws import handle_ec2_instance_creation, handle_security_group_creation, handle_load_balancer_creation, handle_target_group_creation, handle_listener_creation, handle_launch_configuration_creation, handle_auto_scaling_group_creation
-from utilities.aws_resources.ec2 import delete_ec2_instances_by_group
 from utilities.aws_resources.load_balancer import LoadBalancer
 from utilities.aws_resources.target_group import TargetGroup
 from utilities.aws_resources.listener import Listener
 from utilities.aws_resources.security_group import SecurityGroup
 from utilities.aws_resources.launch_configuration import LaunchConfiguration
 from utilities.aws_resources.auto_scaling_group import AutoScalingGroup
-from constants.aws import get_frontend_load_balancer_name, get_frontend_lb_target_group_name, get_frontend_security_group_name, get_frontend_auto_scaling_group_name, get_frontend_launch_config_name, get_frontend_image_id
+from constants.aws import (
+    get_frontend_load_balancer_name, 
+    get_frontend_lb_target_group_name, 
+    get_frontend_security_group_name, 
+    get_frontend_auto_scaling_group_name, 
+    get_frontend_launch_config_name, 
+    get_frontend_image_id
+)
 
 class Frontend():
     def __init__(self, aws_client, ec2_client, elb_client, as_client):

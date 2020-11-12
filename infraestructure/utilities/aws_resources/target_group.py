@@ -17,6 +17,8 @@ class TargetGroup():
             self.elb_client.delete_target_group(
                 TargetGroupArn=self.arn
             )
+        else:
+            print('[ Error ] Deleting Targe Group: Target Group not found ...')
 
     def create(self, protocol, port, vpc_id):
         target_group = self.elb_client.create_target_group(
