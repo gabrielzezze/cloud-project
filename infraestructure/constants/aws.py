@@ -25,6 +25,7 @@ FRONTEND_AUTO_SCALING_GROUP_NAME = "zezze-frontend-as-group"
 def get_frontend_auto_scaling_group_name() -> str:
     return FRONTEND_AUTO_SCALING_GROUP_NAME
 
+
 # Backend names
 BACKEND_SECURITY_GROUP_NAME = "zezze-backend-security-group"
 def get_backend_security_group_name():
@@ -34,6 +35,17 @@ BACKEND_IMAGE_ID = "ami-027d711a2459d7406"
 def get_backend_image_id():
     return BACKEND_IMAGE_ID
 
+BACKEND_ELASTIC_IP_NAME = "zezze-backend-elastic-ip"
+def get_backend_elastic_ip_name():
+    return BACKEND_ELASTIC_IP_NAME
+
 BACKEND_ELASTIC_IP_ALLOC_ID = "eipalloc-0383a09bbaf5d3687"
 def get_elastic_ip_alloc_id():
     return BACKEND_ELASTIC_IP_ALLOC_ID
+
+
+# Database Names
+DATABASE_SECURITY_GROUP_NAME = "zezze-database-security-group"
+def get_database_security_group_name():
+    return DATABASE_SECURITY_GROUP_NAME
+

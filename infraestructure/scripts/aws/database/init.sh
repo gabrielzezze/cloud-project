@@ -1,0 +1,1 @@
+sudo docker run --name cloud-mysql-database -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD mysql:latest
