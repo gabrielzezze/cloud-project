@@ -3,7 +3,8 @@ from utilities.aws_resources.elastic_ip import ElasticIP
 from utilities.aws_resources.security_group import SecurityGroup
 from constants.aws import (
     get_database_security_group_name,
-    get_backend_elastic_ip_name
+    get_backend_elastic_ip_name,
+    get_database_image_id
 )
 
 class Database():
@@ -37,7 +38,7 @@ class Database():
         # Delete DB instance
         deleted_db_instances = self.ec2.delete_by_group()
         if len(deleted_db_instances) > 0:
-            instance_terminated_waiter.wait(InstancesIds=deleted_db_instances)
+            instance_terminated_waiter.wait(InstanceIds=deleted_db_instances)
         
         # Delete security group
         self.security_group.delete()
@@ -46,11 +47,12 @@ class Database():
     def _handle_security_group(self):
         security_group = self.security_group.create('Database security group')
         backend_ip = self.backend_elastic_ip.get_ip()
+        # CidrIp=f"{backend_ip}/32"
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp=f"{backend_ip}/32", FromPort=5000, ToPort=5000)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=80, ToPort=80)
         
     def _handle_ec2_instance(self):
-        image_id = "ami-0a91cd140a1fc148a"
+        image_id = get_database_image_id()
         self.ec2.create(self.security_group.id, image_id)
     
     def __call__(self):

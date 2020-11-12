@@ -49,3 +49,6 @@ DATABASE_SECURITY_GROUP_NAME = "zezze-database-security-group"
 def get_database_security_group_name():
     return DATABASE_SECURITY_GROUP_NAME
 
+DATABASE_IMAGE_ID = "ami-07fcffe449d86a37a"
+def get_database_image_id():
+    return DATABASE_IMAGE_ID
