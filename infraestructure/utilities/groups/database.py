@@ -1,6 +1,7 @@
 from utilities.aws_resources.ec2 import EC2
 from utilities.aws_resources.elastic_ip import ElasticIP
 from utilities.aws_resources.security_group import SecurityGroup
+import os
 from constants.aws import (
     get_database_security_group_name,
     get_backend_elastic_ip_name,
@@ -53,7 +54,13 @@ class Database():
         
     def _handle_ec2_instance(self):
         image_id = get_database_image_id()
-        self.ec2.create(self.security_group.id, image_id)
+        init_user_data = f'''
+            git clone https://github.com/gabrielzezze/cloud-project.git         \
+            chmod +x ./cloud-project/infraestructure/scripts/aws/database.sh    \
+            export MYSQL_ROOT_PASSWORD='{os.getenv("MYSQL_ROOT_PASSWORD")}'     \
+            ./cloud-project/infraestructure/scripts/aws/database.sh             \
+        '''
+        self.ec2.create(self.security_group.id, 'ami-0a91cd140a1fc148a', init_user_data)
     
     def __call__(self):
         print('Destroy Previuous env...')

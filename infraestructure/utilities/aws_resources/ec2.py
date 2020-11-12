@@ -9,7 +9,7 @@ class EC2():
         self.id = None
 
 
-    def create(self, sg_id, image_id):
+    def create(self, sg_id, image_id, user_data=''):
 
         instances = self.ec2_client.create_instances(
             ImageId  = image_id,
@@ -18,6 +18,7 @@ class EC2():
             InstanceType = self.type,
             KeyName  = 'zezze_key',
             SecurityGroupIds = [sg_id],
+            UserData=user_data,
             TagSpecifications = [
                 {
                     'ResourceType': 'instance',

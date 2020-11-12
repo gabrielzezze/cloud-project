@@ -1,3 +1,3 @@
 FROM mysql
 
-COPY ./ /docker-entrypoint-initdb.d/
+COPY ./migrations /docker-entrypoint-initdb.d/
