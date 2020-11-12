@@ -58,7 +58,7 @@ class Database():
         init_user_data = f'''
             git clone https://github.com/gabrielzezze/cloud-project.git         &&    \
             chmod +x ./cloud-project/infraestructure/scripts/aws/database.sh    &&    \
-            export MYSQL_ROOT_PASSWORD='teste123'                               &&    \
+            export MYSQL_ROOT_PASSWORD='{os.getenv("MYSQL_ROOT_PASSWORD")}'     &&    \
             ./cloud-project/infraestructure/scripts/aws/database.sh             
         '''
         self.ec2.create(self.security_group.id, 'ami-0a91cd140a1fc148a', init_user_data)
