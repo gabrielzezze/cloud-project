@@ -1,32 +1,38 @@
 import time
-def _get_load_balancer_arn_by_name(elb_client, name):
-    try:
-        lbs = elb_client.describe_load_balancers(
-            Names=[name]
+class LoadBalancer():
+    def __init__(self, elb_client, name):
+        self.elb_client = elb_client
+        self.arn = None
+        self.name = name
+
+    def _get_arn_by_name(self):
+        try:
+            lbs = self.elb_client.describe_load_balancers(
+                Names=[self.name]
+            )
+            self.arn = lbs.get('LoadBalancers', [{}])[0].get('LoadBalancerArn', None)
+        except Exception as e:
+            print('[ Error ] Deleting LoadBalancer: ', e)
+            self.arn =  None
+
+    def delete(self):
+        self._get_arn_by_name()
+
+        if self.arn is not None:
+            res = self.elb_client.delete_load_balancer(
+                LoadBalancerArn=self.arn
+            )
+            return True
+        return False
+
+    def create(self, subnets, sg_id):
+        lb = self.elb_client.create_load_balancer(
+                Name=self.name, 
+                Subnets=subnets,
+                Scheme='internet-facing', 
+                Type='application',
+                SecurityGroups=[sg_id]
         )
-        return lbs.get('LoadBalancers', [{}])[0].get('LoadBalancerArn', None)
-    except Exception as e:
-        print('Delet LB: ', e)
-        return None
 
-def delete_load_balancer_by_name(elb_client, name):
-    lb_arn = _get_load_balancer_arn_by_name(elb_client, name)
-    if lb_arn is None:
-        return None
-
-    res = elb_client.delete_load_balancer(
-        LoadBalancerArn=lb_arn
-    )
-    return lb_arn
-
-def create_load_balancer_instance(elb_client, name, subnets, sg_id):
-    lb = elb_client.create_load_balancer(
-            Name=name, 
-            Subnets=subnets,
-            Scheme='internet-facing', 
-            Type='application',
-            SecurityGroups=[sg_id]
-    )
-    
-    return lb.get('LoadBalancers', [{}])[0].get('LoadBalancerArn', None)
+        self.arn = lb.get('LoadBalancers', [{}])[0].get('LoadBalancerArn', None)
     

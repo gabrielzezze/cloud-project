@@ -1,6 +1,6 @@
 from utilities.aws import init_aws_client
 from utilities.groups.frontend import Frontend
-from utilities.groups.backend import Backend
+# from utilities.groups.backend import Backend
 import boto3
 import sys
 
@@ -14,10 +14,11 @@ def handle_frontend_infraestructure():
     frontend()
 
 def handle_backend_infraestructrue():
-    aws_client = init_aws_client('ec2', 'us-east-2')
-    ec2_client = boto3.resource('ec2', region_name='us-east-2')
-    backend = Backend(aws_client, ec2_client)
-    backend()
+    pass
+    # aws_client = init_aws_client('ec2', 'us-east-2')
+    # ec2_client = boto3.resource('ec2', region_name='us-east-2')
+    # backend = Backend(aws_client, ec2_client)
+    # backend()
 
 if __name__ == '__main__':
     args = sys.argv

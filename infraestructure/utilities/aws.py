@@ -1,12 +1,6 @@
 import boto3
 import os
-from utilities.aws_resources.security_group import create_security_group
 from utilities.aws_resources.ec2 import create_ec2_instance
-from utilities.aws_resources.load_balancer import create_load_balancer_instance
-from utilities.aws_resources.target_group import create_target_group
-from utilities.aws_resources.listener import create_listener
-from utilities.aws_resources.launch_configuration import create_launch_configuration
-from utilities.aws_resources.auto_scaling_group import create_auto_scaling_group
 import constants.aws as aws_contants
 
 
@@ -26,17 +20,17 @@ def init_aws_client(type: str, region: str):
 
 def handle_security_group_creation(aws_client, type):
 
-    if type == 'frontend':
-        ec2_client = boto3.resource('ec2', region_name='us-east-1')
-        sg_name = aws_contants.get_frontend_security_group_name()
+    # if type == 'frontend':
+    #     ec2_client = boto3.resource('ec2', region_name='us-east-1')
+    #     sg_name = aws_contants.get_frontend_security_group_name()
         
-        security_group = create_security_group(ec2_client, sg_name, 'FrontEnd Security Group')
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=8080, ToPort=8080)
+    #     security_group = create_security_group(ec2_client, sg_name, 'FrontEnd Security Group')
+    #     security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
+    #     security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=8080, ToPort=8080)
 
-        return security_group.id
+    #     return security_group.id
     
-    elif type == 'backend':
+    if type == 'backend':
         ec2_client = boto3.resource('ec2', region_name='us-east-2')
         sg_name = aws_contants.get_backend_security_group_name()
 
@@ -64,74 +58,74 @@ def handle_ec2_instance_creation(aws_client, name, sg_id, type):
         return instance_id
 
 
-def handle_launch_configuration_creation(as_client, name, sg_id, type):
-    if type == 'frontend':
-        image_id = aws_contants.get_frontend_image_id()
-        key_name = 'zezze_key'
-        security_groups_ids = [sg_id]
+# def handle_launch_configuration_creation(as_client, name, sg_id, type):
+#     if type == 'frontend':
+#         image_id = aws_contants.get_frontend_image_id()
+#         key_name = 'zezze_key'
+#         security_groups_ids = [sg_id]
 
-        create_launch_configuration(
-            as_client,
-            name,
-            image_id,
-            key_name,
-            security_groups_ids
-        )
-
-
-def handle_auto_scaling_group_creation(as_client, name, target_groups_arns, subnets_ids, type):
-    if type == 'frontend':
-        launch_config_name = aws_contants.get_frontend_launch_config_name()
-
-        create_auto_scaling_group(
-            as_client,
-            name,
-            launch_config_name,
-            target_groups_arns,
-            2,
-            subnets_ids,
-            type
-        )
+#         create_launch_configuration(
+#             as_client,
+#             name,
+#             image_id,
+#             key_name,
+#             security_groups_ids
+#         )
 
 
-def handle_load_balancer_creation(elb_client, name, subnets, sg_id, type):
-    if type == 'frontend':
-        lb_arn = create_load_balancer_instance(
-            elb_client, 
-            name, 
-            subnets, 
-            sg_id
-        )
-        return lb_arn
+# def handle_auto_scaling_group_creation(as_client, name, target_groups_arns, subnets_ids, type):
+#     if type == 'frontend':
+#         launch_config_name = aws_contants.get_frontend_launch_config_name()
+
+#         create_auto_scaling_group(
+#             as_client,
+#             name,
+#             launch_config_name,
+#             target_groups_arns,
+#             2,
+#             subnets_ids,
+#             type
+#         )
+
+
+# def handle_load_balancer_creation(elb_client, name, subnets, sg_id, type):
+#     if type == 'frontend':
+#         lb_arn = create_load_balancer_instance(
+#             elb_client, 
+#             name, 
+#             subnets, 
+#             sg_id
+#         )
+#         return lb_arn
         
 
-def handle_target_group_creation(elb_client, name, vpc_id, type):
-    if type == 'frontend':
-        tg_arn = create_target_group(
-            elb_client,
-            name,
-            'HTTP',
-            8080,
-            vpc_id
-        )
+# def handle_target_group_creation(elb_client, name, vpc_id, type):
+#     if type == 'frontend':
+#         tg_arn = create_target_group(
+#             elb_client,
+#             name,
+#             'HTTP',
+#             8080,
+#             vpc_id
+#         )
 
-        return tg_arn
+#         return tg_arn
 
 
-def handle_listener_creation(elb_client, tg_arn, lb_arn, type):
-    if type == 'frontend':
-        default_actions = [
-            {
-                'TargetGroupArn': tg_arn,
-                'Type': 'forward',
-            }
-        ]
+# def handle_listener_creation(elb_client, tg_arn, lb_arn, type):
+#     if type == 'frontend':
+#         default_actions = [
+#             {
+#                 'TargetGroupArn': tg_arn,
+#                 'Type': 'forward',
+#             }
+#         ]
         
-        listener = create_listener(
-            elb_client,
-            default_actions,
-            lb_arn,
-            8080,
-            'HTTP'
-        )
-        return listener
+#         listener = create_listener(
+#             elb_client,
+#             default_actions,
+#             lb_arn,
+#             8080,
+#             'HTTP'
+#         )
+#         return listener

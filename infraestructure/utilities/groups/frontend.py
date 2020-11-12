@@ -1,12 +1,12 @@
-from ..aws import handle_ec2_instance_creation, handle_security_group_creation, handle_load_balancer_creation, handle_target_group_creation, handle_listener_creation, handle_launch_configuration_creation, handle_auto_scaling_group_creation
+# from ..aws import handle_ec2_instance_creation, handle_security_group_creation, handle_load_balancer_creation, handle_target_group_creation, handle_listener_creation, handle_launch_configuration_creation, handle_auto_scaling_group_creation
 from utilities.aws_resources.ec2 import delete_ec2_instances_by_group
-from utilities.aws_resources.load_balancer import delete_load_balancer_by_name, _get_load_balancer_arn_by_name
-from utilities.aws_resources.target_group import delete_target_group_by_name
-from utilities.aws_resources.listener import delete_listener_by_load_balancer_arn
-from utilities.aws_resources.security_group import delete_security_group_by_name
-from utilities.aws_resources.launch_configuration import delete_launch_config_by_name
-from utilities.aws_resources.auto_scaling_group import delete_auto_scaling_group_by_name
-from constants.aws import get_frontend_load_balancer_name, get_frontend_lb_target_group_name, get_frontend_security_group_name, get_frontend_auto_scaling_group_name, get_frontend_launch_config_name
+from utilities.aws_resources.load_balancer import LoadBalancer
+from utilities.aws_resources.target_group import TargetGroup
+from utilities.aws_resources.listener import Listener
+from utilities.aws_resources.security_group import SecurityGroup
+from utilities.aws_resources.launch_configuration import LaunchConfiguration
+from utilities.aws_resources.auto_scaling_group import AutoScalingGroup
+from constants.aws import get_frontend_load_balancer_name, get_frontend_lb_target_group_name, get_frontend_security_group_name, get_frontend_auto_scaling_group_name, get_frontend_launch_config_name, get_frontend_image_id
 
 class Frontend():
     def __init__(self, aws_client, ec2_client, elb_client, as_client):
@@ -14,127 +14,93 @@ class Frontend():
         self.ec2_client = ec2_client
         self.elb_client = elb_client
         self.as_client  = as_client
-        self.ec2_instances = None
-        self.target_group_arn = None
 
-        self.FRONTEND_MACHINES_NAMES = [
-            'zezze-frontend-0',
-            'zezze-frontend-1'
-        ]
+        self._prepare_resources()
     
 
-    def _destroy_previous_env(self):
+    def _prepare_resources(self):
+        as_group_name = get_frontend_auto_scaling_group_name()
+        self.auto_scaling_group = AutoScalingGroup(self.as_client, as_group_name, 'frontend')
 
+        sg_group_name = get_frontend_security_group_name()
+        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, sg_group_name)
+
+        lb_name = get_frontend_load_balancer_name()
+        self.load_balancer = LoadBalancer(self.elb_client, lb_name)
+
+        tg_name = get_frontend_lb_target_group_name()
+        self.target_group = TargetGroup(self.elb_client, tg_name, 'frontend')
+    
+        self.listener = Listener(self.elb_client, None)
+
+        launch_config_name = get_frontend_launch_config_name()
+        self.launch_configuration = LaunchConfiguration(self.as_client, launch_config_name)
+
+
+    def _destroy_previous_env(self):
         load_balancer_deleted_waiter = self.elb_client.get_waiter('load_balancers_deleted')
         termination_waiter = self.aws_client.get_waiter('instance_terminated')
 
-        as_group_name = get_frontend_auto_scaling_group_name()
-        deleting_instances = delete_auto_scaling_group_by_name(self.as_client, as_group_name)
+        is_deleting_previous_as_group = self.auto_scaling_group.delete()
+        self.launch_configuration.delete()
         
+        self.load_balancer._get_arn_by_name()
 
-        launch_config_name = get_frontend_launch_config_name()
-        delete_launch_config_by_name(self.as_client, launch_config_name)
-
-        name = get_frontend_load_balancer_name()
-        lb_arn = _get_load_balancer_arn_by_name(self.elb_client, name)
-        if lb_arn is not None:
+        if self.load_balancer.arn is not None:
             # Delete previous listener
-            delete_listener_by_load_balancer_arn(self.elb_client, lb_arn)
+            self.listener.load_balancer_arn = self.load_balancer.arn
+            self.listener.delete()
         
             # Delete load balancer
-            delete_load_balancer_by_name(self.elb_client, name)
-            load_balancer_deleted_waiter.wait(Names=[name], WaiterConfig={
-                'Delay': 20,
-                'MaxAttempts': 45
-            })
+            deleting_load_balancer = self.load_balancer.delete()
+            if deleting_load_balancer:
+                load_balancer_deleted_waiter.wait(Names=[self.load_balancer.name])
 
             # Delete target group
-            tg_name = get_frontend_lb_target_group_name()
-            delete_target_group_by_name(self.elb_client, tg_name)
+            self.target_group.delete()
 
-        if deleting_instances:
+        if is_deleting_previous_as_group:
             termination_waiter.wait(
                 Filters=[
                     { 'Name': 'tag:Owner', 'Values': [ 'zezze' ] },
                     { 'Name': 'tag:Type', 'Values':  ['frontend'] }
-                ]
-            )
-        # Delete EC2 frontend instances
-        deleted_instances_ids = delete_ec2_instances_by_group(self.ec2_client, 'frontend')
-        if len(deleted_instances_ids) != 0:
-            termination_waiter.wait(InstanceIds=deleted_instances_ids)
-        
+                ])
+
         # Delete security group
-        name = get_frontend_security_group_name()
-        delete_security_group_by_name(self.aws_client, name)
+        self.security_group.delete()
 
 
     def _handle_frontend_security_group(self):
-        sg_id = handle_security_group_creation(self.aws_client, 'frontend')
-        self.security_group_id = sg_id
+        security_group = self.security_group.create('Frontend Security Group')
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=8080, ToPort=8080) 
 
-
-    def _handle_frontend_ec2_instances(self):
-
-        instances_ids = []
-        for machine_name in self.FRONTEND_MACHINES_NAMES:
-            instance_id = handle_ec2_instance_creation(self.aws_client, machine_name, self.security_group_id, 'frontend')
-            instances_ids.append({ 'Id': instance_id })
-        
-        self.ec2_instances = instances_ids
-    
 
     def _handle_frontend_load_balancer(self):
         running_waiter = self.aws_client.get_waiter('instance_running')
 
-        name = get_frontend_load_balancer_name()
-
         subnets = [subnet.id for subnet in list(self.ec2_client.subnets.all())]
-        lb_arn = handle_load_balancer_creation(
-            self.elb_client,
-            name,
-            subnets,
-            self.security_group_id,
-            'frontend'
-        )
+        self.load_balancer.create(subnets, self.security_group.id)
 
         vpc_id = list(self.ec2_client.vpcs.all())[0].id
-        tg_name = get_frontend_lb_target_group_name()
-        tg_arn = handle_target_group_creation(
-            self.elb_client,
-            tg_name,
-            vpc_id,
-            'frontend'
-        )
+        self.target_group.create('HTTP', 8080, vpc_id)
 
-        self.target_group_arn = tg_arn
+        default_actions = [{
+                'TargetGroupArn': self.target_group.arn,
+                'Type': 'forward'
+            }]
+        self.listener.load_balancer_arn = self.load_balancer.arn
+        self.listener.create(default_actions, 8080, 'HTTP')
 
-        _listener = handle_listener_creation(
-            self.elb_client, 
-            tg_arn, 
-            lb_arn, 
-            'frontend'
-        )
-
-        if self.ec2_instances:
-            running_waiter.wait(InstanceIds=[instance.get('Id', None) for instance in self.ec2_instances])
-
-            rg_targets = self.elb_client.register_targets(
-                TargetGroupArn=tg_arn,
-                Targets=self.ec2_instances
-            )
-
-        self.load_balancer_arn = lb_arn
 
     def _handle_frontend_launch_configuration(self):
-        name = get_frontend_launch_config_name()
-        handle_launch_configuration_creation(self.as_client, name, self.security_group_id, 'frontend')
+        image_id = get_frontend_image_id()
+        self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id])
+
 
     def _handle_frontend_auto_scaling_group(self):
-        name = get_frontend_auto_scaling_group_name()
-        subnets = [subnet.id for subnet in list(self.ec2_client.subnets.all())]
-
-        handle_auto_scaling_group_creation(self.as_client, name, [self.target_group_arn], ','.join(subnets), 'frontend')
+        subnets = ','.join([subnet.id for subnet in list(self.ec2_client.subnets.all())])
+        self.auto_scaling_group.create(self.launch_configuration.name, [self.target_group.arn], 2, subnets)
 
 
     def __call__(self):
@@ -151,20 +117,14 @@ class Frontend():
         print('Creating Launch config...')
         self._handle_frontend_launch_configuration()
 
-        waiter = self.elb_client.get_waiter('load_balancer_available')
-        waiter.wait(LoadBalancerArns=[self.load_balancer_arn])
+        print('Waiting for load balancer availability...')
+        load_balancer_availability_waiter = self.elb_client.get_waiter('load_balancer_available')
+        load_balancer_availability_waiter.wait(LoadBalancerArns=[self.load_balancer.arn])
 
         print('Creating auto scaling group...')
         self._handle_frontend_auto_scaling_group()
 
-        # print('EC2 instances...')
-        # self._handle_frontend_ec2_instances()
         print('Done')
-
-
-        # lb = self.elb_client.describe_load_balancers(LoadBalancerArns=[self.load_balancer_arn])
-        # addr = lb.get('LoadBalancers', [{}])[0].get('DNSName', None)
-        # print(f'Frontend Available at: {addr}')
 
 
 

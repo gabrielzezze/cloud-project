@@ -1,21 +1,29 @@
-def _get_listener_arn_by_load_balancer_arn(elb_client, lb_arn):
-    listener = elb_client.describe_listeners(LoadBalancerArn=lb_arn)
+class Listener():
+    def __init__(self, elb_client, load_balancer_arn):
+        self.elb_client = elb_client
+        self.load_balancer_arn = load_balancer_arn
+        self.arn = None
 
-    return listener.get('Listeners', [{}])[0].get('ListenerArn', None)
 
-def delete_listener_by_load_balancer_arn(elb_client, lb_arn):
-    listener_arn = _get_listener_arn_by_load_balancer_arn(elb_client, lb_arn)
-    if listener_arn is not None:
-        response = elb_client.delete_listener(
-            ListenerArn=listener_arn
+    def _get_arn_by_load_balancer_arn(self):
+        listeners = self.elb_client.describe_listeners(LoadBalancerArn=self.load_balancer_arn)
+        listeners = listeners.get('Listeners', [])
+        if len(listeners) > 0:
+            self.arn = listeners[0].get('ListenerArn', None)
+
+    def delete(self):
+        self._get_arn_by_load_balancer_arn()
+        if self.arn is not None:
+            response = self.elb_client.delete_listener(
+                ListenerArn=self.arn
+            )
+
+    def create(self, default_actions, port, protocol):
+        listener = self.elb_client.create_listener(
+            DefaultActions=default_actions,
+            LoadBalancerArn=self.load_balancer_arn,
+            Port=port,
+            Protocol=protocol
         )
 
-def create_listener(elb_client, default_actions, lb_arn, port, protocol):
-    listener = elb_client.create_listener(
-        DefaultActions=default_actions,
-        LoadBalancerArn=lb_arn,
-        Port=port,
-        Protocol=protocol
-    )
-
-    return listener
+        return listener
