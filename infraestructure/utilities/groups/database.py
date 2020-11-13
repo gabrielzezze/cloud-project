@@ -64,7 +64,7 @@ class Database():
             user_data_script = '\n'.join(script_file)
 
         if user_data_script is not None:
-            user_data_script = user_data_script.replace('__password-placeholder__', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
+            user_data_script = user_data_script.replace('$MYSQL_ROOT_PASSWORD', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
             print(user_data_script)
             self.ec2.create(self.security_group.id, 'ami-0a91cd140a1fc148a', user_data_script)
         else:
