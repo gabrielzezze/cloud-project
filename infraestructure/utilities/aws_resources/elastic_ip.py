@@ -18,3 +18,4 @@ class ElasticIP():
             self.public_ip = ip
 
         return self.public_ip
+        

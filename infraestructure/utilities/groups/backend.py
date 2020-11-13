@@ -1,5 +1,6 @@
 from utilities.aws_resources.ec2 import EC2
 from utilities.aws_resources.security_group import SecurityGroup
+import os
 from constants.aws import (
     get_backend_security_group_name, 
     get_elastic_ip_alloc_id, 
@@ -14,6 +15,10 @@ class Backend():
         self.BACKEND_MACHINES_NAMES = [
             'zezze-backend-0'
         ]
+        self.USER_DATA_SCRIPT_PATH = os.path.join(
+            os.path.dirname(__file__), 
+            '../../scripts/aws/backend/user_data.sh'
+        )
 
         self._prepare_resources()
 
@@ -44,8 +49,15 @@ class Backend():
     
     def _handle_ec2_instance(self):
         image_id = get_backend_image_id()
-        self.ec2.create(self.security_group.id, image_id)
 
+        user_data_script = None
+        with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
+            user_data_script = '\n'.join(script_file)
+
+        if user_data_script is not None:
+            self.ec2.create(self.security_group.id, image_id, user_data_script)
+        else:
+            print('[ Error ] Failed to open user data script')
 
     def _handle_elastic_ip_association(self):
         instance_id = self.ec2.id

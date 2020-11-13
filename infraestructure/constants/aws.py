@@ -35,7 +35,7 @@ def get_backend_security_group_name():
 
 BACKEND_IMAGE_ID = "ami-027d711a2459d7406"
 def get_backend_image_id():
-    return BACKEND_IMAGE_ID
+    return DEFAULT_UBUNTU_IMAGE_ID
 
 BACKEND_ELASTIC_IP_NAME = "zezze-backend-elastic-ip"
 def get_backend_elastic_ip_name():
