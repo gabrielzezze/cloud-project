@@ -65,8 +65,7 @@ class Database():
 
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$MYSQL_ROOT_PASSWORD', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
-            print(user_data_script)
-            self.ec2.create(self.security_group.id, 'ami-0a91cd140a1fc148a', user_data_script)
+            self.ec2.create(self.security_group.id, image_id, user_data_script)
         else:
             print('[ Error ] Unable to read user data')
     

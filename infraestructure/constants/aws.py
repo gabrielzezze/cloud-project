@@ -1,3 +1,5 @@
+DEFAULT_UBUNTU_IMAGE_ID = 'ami-0a91cd140a1fc148a'
+
 # Frontend Names
 FRONTEND_IMAGE_ID = "ami-047056bb387ad7173"
 def get_frontend_image_id() -> str:
@@ -51,4 +53,4 @@ def get_database_security_group_name():
 
 DATABASE_IMAGE_ID = "ami-07fcffe449d86a37a"
 def get_database_image_id():
-    return DATABASE_IMAGE_ID
+    return DEFAULT_UBUNTU_IMAGE_ID
