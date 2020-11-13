@@ -10,7 +10,7 @@ class EC2():
 
 
     def create(self, sg_id, image_id, user_data=''):
-
+        
         instances = self.ec2_client.create_instances(
             ImageId  = image_id,
             MinCount = 1,

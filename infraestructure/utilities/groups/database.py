@@ -15,6 +15,10 @@ class Database():
         self.ec2 = None
         self.security_group = None
         self.DATABASE_MACHINE_NAME = "zezze-mysql-database"
+        self.USER_DATA_SCRIPT_PATH = os.path.join(
+            os.path.dirname(__file__), 
+            '../../scripts/aws/database/user_data.sh'
+        )
 
         self._prepare_resources()
 
@@ -54,14 +58,17 @@ class Database():
         
     def _handle_ec2_instance(self):
         image_id = get_database_image_id()
-        # {os.getenv("MYSQL_ROOT_PASSWORD")}
-        init_user_data = f'''
-            git clone https://github.com/gabrielzezze/cloud-project.git         &&    \
-            chmod +x ./cloud-project/infraestructure/scripts/aws/database.sh    &&    \
-            export MYSQL_ROOT_PASSWORD='{os.getenv("MYSQL_ROOT_PASSWORD")}'     &&    \
-            ./cloud-project/infraestructure/scripts/aws/database.sh             
-        '''
-        self.ec2.create(self.security_group.id, 'ami-0a91cd140a1fc148a', init_user_data)
+
+        user_data_script = None
+        with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
+            user_data_script = '\n'.join(script_file)
+
+        if user_data_script is not None:
+            user_data_script = user_data_script.replace('__password-placeholder__', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
+            print(user_data_script)
+            self.ec2.create(self.security_group.id, 'ami-0a91cd140a1fc148a', user_data_script)
+        else:
+            print('[ Error ] Unable to read user data')
     
     def __call__(self):
         print('Destroy Previuous env...')
