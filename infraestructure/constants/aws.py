@@ -3,7 +3,7 @@ DEFAULT_UBUNTU_IMAGE_ID = 'ami-0a91cd140a1fc148a'
 # Frontend Names
 FRONTEND_IMAGE_ID = "ami-047056bb387ad7173"
 def get_frontend_image_id() -> str:
-    return DEFAULT_UBUNTU_IMAGE_ID
+    return 'ami-0885b1f6bd170450c'
 
 FRONTEND_SECURITY_GROUP_NAME = "zezze-frontend_security_group"
 def get_frontend_security_group_name() -> str:

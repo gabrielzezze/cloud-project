@@ -17,15 +17,16 @@ from constants.aws import (
 import os
 
 class Frontend():
-    def __init__(self, aws_client, ec2_client, elb_client, as_client):
+    def __init__(self, aws_client, ec2_client, elb_client, as_client, ohio_aws_client):
         self.aws_client = aws_client
         self.ec2_client = ec2_client
         self.elb_client = elb_client
         self.as_client  = as_client
+        self.ohio_aws_client = ohio_aws_client
 
         self.USER_DATA_SCRIPT_PATH = os.path.join(
             os.path.dirname(__file__), 
-            '../../scripts/aws/backend/user_data.sh'
+            '../../scripts/aws/frontend/user_data.sh'
         )
 
         self._prepare_resources()
@@ -50,7 +51,7 @@ class Frontend():
         self.launch_configuration = LaunchConfiguration(self.as_client, launch_config_name)
 
         backend_elastic_ip_name = get_backend_elastic_ip_name()
-        self.backend_elastic_ip = ElasticIP(self.aws_client, backend_elastic_ip_name)
+        self.backend_elastic_ip = ElasticIP(self.ohio_aws_client, backend_elastic_ip_name)
 
 
     def _destroy_previous_env(self):

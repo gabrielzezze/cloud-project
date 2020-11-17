@@ -18,9 +18,9 @@ class ElasticIP():
             alloc_id = addresses[0].get('AllocationId', None)
             ip = addresses[0].get('PublicIp', None)
             self.allocation_id = alloc_id
-            self.public_ip = ip
+            self.ip = ip
 
-        return self.public_ip
+        return self.ip
     
     def _handle_tag_association(self):
         if self.allocation_id is not None:
