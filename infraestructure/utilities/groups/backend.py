@@ -1,10 +1,12 @@
 from utilities.aws_resources.ec2 import EC2
+from utilities.aws_resources.elastic_ip import ElasticIP
 from utilities.aws_resources.security_group import SecurityGroup
 import os
 from constants.aws import (
     get_backend_security_group_name, 
     get_elastic_ip_alloc_id, 
-    get_backend_image_id
+    get_backend_image_id,
+    get_backend_elastic_ip_name
 )
 
 class Backend():
@@ -23,15 +25,25 @@ class Backend():
         self._prepare_resources()
 
     def _prepare_resources(self):
+        # EC2
         self.ec2 = EC2(self.ec2_client, self.BACKEND_MACHINES_NAMES[0], 'backend')
 
+        # Security Group
         security_group_name = get_backend_security_group_name()
         self.security_group = SecurityGroup(self.aws_client, self.ec2_client, security_group_name)
+
+        # Elastic IP
+        elastic_ip_name = get_backend_elastic_ip_name()
+        self.elastic_ip = ElasticIP(self.aws_client, elastic_ip_name)
 
 
     def _destroy_previous_env(self):
         # Waiters
         termination_waiter = self.aws_client.get_waiter('instance_terminated')
+
+        # Delete elastic ip
+        self.elastic_ip.get_ip()
+        self.elastic_ip.delete()
 
         # Delete EC2 instances
         deleted_instances_ids = self.ec2.delete_by_group()
@@ -40,7 +52,7 @@ class Backend():
         
         # Delete security group
         self.security_group.delete()
-    
+
 
     def _handle_security_group(self):
         security_group = self.security_group.create('Backend Security Group')
@@ -61,14 +73,16 @@ class Backend():
 
     def _handle_elastic_ip_association(self):
         instance_id = self.ec2.id
-        allocation_id = get_elastic_ip_alloc_id()
 
         if instance_id is not None:
             self.aws_client.associate_address(
                 InstanceId   = instance_id,
-                AllocationId = allocation_id
+                AllocationId = self.elastic_ip.allocation_id
             )
     
+    def _handle_elastic_ip_creation(self):
+        self.elastic_ip.create()
+
     def _handle_auto_scalling(self):
         pass
 
@@ -87,5 +101,6 @@ class Backend():
         running_waiter.wait(InstanceIds=[self.ec2.id])
         
         print('Association Elastic IP...')
+        self.elastic_ip.create()
         self._handle_elastic_ip_association()
 
