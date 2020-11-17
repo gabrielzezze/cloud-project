@@ -4,14 +4,17 @@ from utilities.aws_resources.listener import Listener
 from utilities.aws_resources.security_group import SecurityGroup
 from utilities.aws_resources.launch_configuration import LaunchConfiguration
 from utilities.aws_resources.auto_scaling_group import AutoScalingGroup
+from utilities.aws_resources.elastic_ip import ElasticIP
 from constants.aws import (
     get_frontend_load_balancer_name, 
     get_frontend_lb_target_group_name, 
     get_frontend_security_group_name, 
     get_frontend_auto_scaling_group_name, 
     get_frontend_launch_config_name, 
-    get_frontend_image_id
+    get_frontend_image_id,
+    get_backend_elastic_ip_name
 )
+import os
 
 class Frontend():
     def __init__(self, aws_client, ec2_client, elb_client, as_client):
@@ -19,6 +22,11 @@ class Frontend():
         self.ec2_client = ec2_client
         self.elb_client = elb_client
         self.as_client  = as_client
+
+        self.USER_DATA_SCRIPT_PATH = os.path.join(
+            os.path.dirname(__file__), 
+            '../../scripts/aws/backend/user_data.sh'
+        )
 
         self._prepare_resources()
     
@@ -40,6 +48,9 @@ class Frontend():
 
         launch_config_name = get_frontend_launch_config_name()
         self.launch_configuration = LaunchConfiguration(self.as_client, launch_config_name)
+
+        backend_elastic_ip_name = get_backend_elastic_ip_name()
+        self.backend_elastic_ip = ElasticIP(self.aws_client, backend_elastic_ip_name)
 
 
     def _destroy_previous_env(self):
@@ -100,7 +111,16 @@ class Frontend():
 
     def _handle_frontend_launch_configuration(self):
         image_id = get_frontend_image_id()
-        self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id])
+
+        user_data_script = None
+        with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
+            user_data_script = '\n'.join(script_file)
+
+        self.backend_elastic_ip.get_ip()
+        if user_data_script is not None and self.backend_elastic_ip.ip is not None:
+            user_data_script = user_data_script.replace('$BACKEND_ELASTIC_IP', self.backend_elastic_ip.ip)
+            print(user_data_script)
+            self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data=user_data_script)
 
 
     def _handle_frontend_auto_scaling_group(self):

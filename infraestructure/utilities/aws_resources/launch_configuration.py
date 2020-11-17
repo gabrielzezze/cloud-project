@@ -12,11 +12,12 @@ class LaunchConfiguration():
             print('[ Error ] Deleting Launch Config: ', e)
 
 
-    def create(self, imageId, keyName, security_groups_ids, instance_type='t2.micro'):
+    def create(self, imageId, keyName, security_groups_ids, user_data='', instance_type='t2.micro'):
         self.as_client.create_launch_configuration(
             LaunchConfigurationName=self.name,
             ImageId=imageId,
             KeyName=keyName,
             SecurityGroups=security_groups_ids,
-            InstanceType=instance_type
+            InstanceType=instance_type,
+            UserData=user_data
         )
