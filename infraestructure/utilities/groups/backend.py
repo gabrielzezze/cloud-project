@@ -41,9 +41,9 @@ class Backend():
         # Waiters
         termination_waiter = self.aws_client.get_waiter('instance_terminated')
 
-        # Delete elastic ip
-        self.elastic_ip.get_ip()
-        self.elastic_ip.delete()
+        # # Delete elastic ip
+        # self.elastic_ip.get_ip()
+        # self.elastic_ip.delete()
 
         # Delete EC2 instances
         deleted_instances_ids = self.ec2.delete_by_group()
@@ -100,7 +100,8 @@ class Backend():
         running_waiter = self.aws_client.get_waiter('instance_running')
         running_waiter.wait(InstanceIds=[self.ec2.id])
         
-        print('Association Elastic IP...')
-        self.elastic_ip.create()
+        # print('Association Elastic IP...')
+        # self.elastic_ip.create()
+        self.elastic_ip.get_ip()
         self._handle_elastic_ip_association()
 

@@ -113,15 +113,15 @@ class Frontend():
     def _handle_frontend_launch_configuration(self):
         image_id = get_frontend_image_id()
 
-        user_data_script = None
-        with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
-            user_data_script = '\n'.join(script_file)
+        # user_data_script = None
+        # with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
+        #     user_data_script = '\n'.join(script_file)
 
-        self.backend_elastic_ip.get_ip()
-        if user_data_script is not None and self.backend_elastic_ip.ip is not None:
-            user_data_script = user_data_script.replace('$BACKEND_ELASTIC_IP', self.backend_elastic_ip.ip)
-            print(user_data_script)
-            self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data=user_data_script)
+        # self.backend_elastic_ip.get_ip()
+        # if user_data_script is not None and self.backend_elastic_ip.ip is not None:
+        #     user_data_script = user_data_script.replace('$BACKEND_ELASTIC_IP', self.backend_elastic_ip.ip)
+        #     print(user_data_script)
+        self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data=user_data_script)
 
 
     def _handle_frontend_auto_scaling_group(self):
