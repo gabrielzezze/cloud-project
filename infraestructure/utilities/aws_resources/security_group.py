@@ -1,3 +1,5 @@
+from time import sleep
+
 class SecurityGroup():
     def __init__(self, aws_client, ec2_client, name):
         self.aws_client = aws_client
@@ -5,7 +7,7 @@ class SecurityGroup():
         self.name = name
         self.id = None
 
-    def delete(self):
+    def delete(self, delay=5):
         try:
             security_groups = self.aws_client.describe_security_groups(
                 GroupNames=[self.name]
@@ -15,8 +17,16 @@ class SecurityGroup():
 
         if len(security_groups) != 0:
             sg_id = security_groups[0].get('GroupId')
-            self.aws_client.delete_security_group(GroupId=sg_id)
-            self.id = sg_id
+            deleted = False
+            while (not deleted):
+                try:
+                    self.aws_client.delete_security_group(GroupId=sg_id)
+                    self.id = sg_id
+                    deleted = True
+                except:
+                    print('Not deleted yet...')
+                    sleep(delay)
+                    deleted = False
 
     def create(self, description):
         security_group = self.ec2_client.create_security_group(GroupName=self.name, Description=description)

@@ -15,6 +15,7 @@ from constants.aws import (
     get_backend_elastic_ip_name
 )
 import os
+import time
 
 class Frontend():
     def __init__(self, aws_client, ec2_client, elb_client, as_client, ohio_aws_client):
@@ -85,6 +86,7 @@ class Frontend():
 
         # Delete security group
         self.security_group.delete()
+            
 
 
     def _handle_frontend_security_group(self):
@@ -121,7 +123,7 @@ class Frontend():
         # if user_data_script is not None and self.backend_elastic_ip.ip is not None:
         #     user_data_script = user_data_script.replace('$BACKEND_ELASTIC_IP', self.backend_elastic_ip.ip)
         #     print(user_data_script)
-        self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data=user_data_script)
+        self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data='')
 
 
     def _handle_frontend_auto_scaling_group(self):
@@ -132,6 +134,7 @@ class Frontend():
     def __call__(self):
         print('Init Fronend Deploy')
 
+        print('Destroing Env...')
         self._destroy_previous_env()
 
         print('Security group...')
