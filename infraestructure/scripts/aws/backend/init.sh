@@ -15,4 +15,3 @@ sudo apt install --no-install-recommends yarn -y
 git clone https://github.com/gabrielzezze/cloud-project-applications.git ./applications
 cd ./applications/backend
 yarn install
-yarn run prod
