@@ -1,4 +1,14 @@
-DROP DATABASE IF EXISTS cloud_application;
-CREATE DATABASE cloud_application;
+DROP DATABASE IF EXISTS Cloud;
+CREATE DATABASE Cloud;
+
+USE Cloud;
+DROP TABLE IF EXISTS Tasks;
+CREATE TABLE Tasks(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    status VARCHAR(255) NOT NULL,
+    createdAt DATETIME,
+    updatedAt DATETIME
+);
 
 

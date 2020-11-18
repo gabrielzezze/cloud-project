@@ -54,3 +54,7 @@ def get_database_security_group_name():
 DATABASE_IMAGE_ID = "ami-07fcffe449d86a37a"
 def get_database_image_id():
     return DEFAULT_UBUNTU_IMAGE_ID
+
+DATABASE_ELASTIC_IP_NAME = 'zezze-database-elastic-ip'
+def get_database_elastic_ip_name():
+    return DATABASE_ELASTIC_IP_NAME

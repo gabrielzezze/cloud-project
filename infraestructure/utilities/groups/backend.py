@@ -6,7 +6,8 @@ from constants.aws import (
     get_backend_security_group_name, 
     get_elastic_ip_alloc_id, 
     get_backend_image_id,
-    get_backend_elastic_ip_name
+    get_backend_elastic_ip_name,
+    get_database_elastic_ip_name
 )
 
 class Backend():
@@ -36,12 +37,16 @@ class Backend():
         elastic_ip_name = get_backend_elastic_ip_name()
         self.elastic_ip = ElasticIP(self.aws_client, elastic_ip_name)
 
+        # Database Elastic IP
+        database_elastic_ip_name = get_database_elastic_ip_name()
+        self.database_elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
+
 
     def _destroy_previous_env(self):
         # Waiters
         termination_waiter = self.aws_client.get_waiter('instance_terminated')
 
-        # # Delete elastic ip
+        # Delete elastic ip
         # self.elastic_ip.get_ip()
         # self.elastic_ip.delete()
 
@@ -66,10 +71,16 @@ class Backend():
         with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
             user_data_script = '\n'.join(script_file)
 
+        self.database_elastic_ip.get_ip()
+        if self.database_elastic_ip.ip is None:
+            print('[INFO] Database elastic ip not found, creating one now ...')
+            self.database_elastic_ip.create()
+        
         if user_data_script is not None:
+            user_data_script = user_data_script.replace('$DATABASE_IP', self.database_elastic_ip.ip)
+            user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
             self.ec2.create(self.security_group.id, image_id, user_data_script)
-        else:
-            print('[ Error ] Failed to open user data script')
+
 
     def _handle_elastic_ip_association(self):
         instance_id = self.ec2.id
@@ -81,7 +92,10 @@ class Backend():
             )
     
     def _handle_elastic_ip_creation(self):
-        self.elastic_ip.create()
+        self.elastic_ip.get_ip()
+
+        if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
+            self.elastic_ip.create()
 
     def _handle_auto_scalling(self):
         pass
@@ -100,8 +114,8 @@ class Backend():
         running_waiter = self.aws_client.get_waiter('instance_running')
         running_waiter.wait(InstanceIds=[self.ec2.id])
         
-        # print('Association Elastic IP...')
-        # self.elastic_ip.create()
-        self.elastic_ip.get_ip()
+        print('Creating Elastic IP if needed...')
+        self._handle_elastic_ip_creation()
+        print('Allocating Elastic IP...')
         self._handle_elastic_ip_association()
 

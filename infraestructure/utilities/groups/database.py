@@ -5,7 +5,8 @@ import os
 from constants.aws import (
     get_database_security_group_name,
     get_backend_elastic_ip_name,
-    get_database_image_id
+    get_database_image_id,
+    get_database_elastic_ip_name
 )
 
 class Database():
@@ -33,6 +34,10 @@ class Database():
         # Backend Elastic Ip
         backend_elastic_ip_name = get_backend_elastic_ip_name()
         self.backend_elastic_ip = ElasticIP(self.aws_client, backend_elastic_ip_name)
+
+        # Elastic Ip
+        database_elastic_ip_name = get_database_elastic_ip_name()
+        self.elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
         
 
 
@@ -51,7 +56,12 @@ class Database():
 
     def _handle_security_group(self):
         security_group = self.security_group.create('Database security group')
-        backend_ip = self.backend_elastic_ip.get_ip()
+        
+        self.backend_elastic_ip.get_ip()
+        if self.backend_elastic_ip.ip is None:
+            print('[INFO] Backend elastic ip not found, creating one now ...')
+            self.backend_elastic_ip.create()
+        
         # CidrIp=f"{backend_ip}/32"
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=80, ToPort=80)
@@ -68,6 +78,21 @@ class Database():
             self.ec2.create(self.security_group.id, image_id, user_data_script)
         else:
             print('[ Error ] Unable to read user data')
+
+    def _handle_elastic_ip_association(self):
+        instance_id = self.ec2.id
+
+        if instance_id is not None:
+            self.aws_client.associate_address(
+                InstanceId   = instance_id,
+                AllocationId = self.elastic_ip.allocation_id
+            )
+    
+    def _handle_elastic_ip_creation(self):
+        self.elastic_ip.get_ip()
+
+        if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
+            self.elastic_ip.create()
     
     def __call__(self):
         print('Destroy Previuous env...')
@@ -82,5 +107,10 @@ class Database():
         print('Waiting Instance ...')
         running_waiter = self.aws_client.get_waiter('instance_running')
         running_waiter.wait(InstanceIds=[self.ec2.id])
+
+        print('Creating Elastic IP if needed...')
+        self._handle_elastic_ip_creation()
+        print('Allocating Elastic IP...')
+        self._handle_elastic_ip_association()
 
         print('Done')
