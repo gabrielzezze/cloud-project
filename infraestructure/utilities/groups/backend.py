@@ -46,10 +46,6 @@ class Backend():
         # Waiters
         termination_waiter = self.aws_client.get_waiter('instance_terminated')
 
-        # Delete elastic ip
-        # self.elastic_ip.get_ip()
-        # self.elastic_ip.delete()
-
         # Delete EC2 instances
         deleted_instances_ids = self.ec2.delete_by_group()
         if len(deleted_instances_ids) > 0:

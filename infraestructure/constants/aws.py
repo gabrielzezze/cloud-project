@@ -58,3 +58,16 @@ def get_database_image_id():
 DATABASE_ELASTIC_IP_NAME = 'zezze-database-elastic-ip'
 def get_database_elastic_ip_name():
     return DATABASE_ELASTIC_IP_NAME
+
+# Backend VPN
+BACKEND_VPN_GATEWAY_NAME = 'zezze-backend-vpn-gateway'
+def get_backend_vpn_gateway_name():
+    return BACKEND_VPN_GATEWAY_NAME
+
+BACKEND_VPN_GATEWAY_SECURITY_GROUP_NAME = 'zezze-backend-vpn-security-group'
+def get_backend_vpn_gateway_security_group_name():
+    return BACKEND_VPN_GATEWAY_SECURITY_GROUP_NAME
+
+BACKEND_VPN_GATEWAY_IMAGE_ID = DEFAULT_UBUNTU_IMAGE_ID
+def get_backend_vpn_gateway_image_id():
+    return BACKEND_VPN_GATEWAY_IMAGE_ID
