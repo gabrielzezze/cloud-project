@@ -2,6 +2,9 @@
 sudo apt update
 sudo apt upgrade -y
 
+# Install Wireguard
+sudo apt install wireguard -y
+
 # Install Node + yarn + npm
 # -Node + Npm
 sudo apt install nodejs -y

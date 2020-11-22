@@ -1,5 +1,6 @@
 from utilities.aws_resources.ec2 import EC2
 from utilities.aws_resources.security_group import SecurityGroup
+import os
 from constants.aws import (
     get_backend_vpn_gateway_name,
     get_backend_vpn_gateway_security_group_name,
@@ -10,6 +11,11 @@ class BackendGateway():
     def __init__(self, aws_client, ec2_client):
         self.aws_client = aws_client
         self.ec2_client = ec2_client
+
+        self.USER_DATA_SCRIPT_PATH = os.path.join(
+            os.path.dirname(__file__), 
+            '../../scripts/aws/backend_gateway/user_data.sh'
+        )
         
         self._prepare_resources()
 
@@ -40,7 +46,13 @@ class BackendGateway():
     
     def _handle_ec2_instances(self):
         image_id = get_backend_vpn_gateway_image_id()
-        self.ec2.create(self.security_group.id, image_id)
+
+        user_data_script = None
+        with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
+            user_data_script = '\n'.join(script_file)
+
+        if user_data_script is not None:
+            self.ec2.create(self.security_group.id, image_id)
 
     def __call__(self):
         print('Backenf Gateway')
