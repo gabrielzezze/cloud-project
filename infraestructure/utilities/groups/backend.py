@@ -23,6 +23,7 @@ class Backend():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend/user_data.sh'
         )
+        self.VPN_ADDRESS = "14.0.0.2/24"
         self._prepare_resources()
         self.keys()
 
@@ -79,6 +80,7 @@ class Backend():
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$APPLICATION_PRIVATE_KEY', self.keys.private_key)
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
+            user_data_script = user_data_script.replace('$VPN_ADDRESS', self.VPN_ADDRESS)
             user_data_script = user_data_script.replace('$DATABASE_IP', self.database_elastic_ip.ip)
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
             print(user_data_script)
