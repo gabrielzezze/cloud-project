@@ -8,7 +8,8 @@ from constants.aws import (
     get_elastic_ip_alloc_id, 
     get_backend_image_id,
     get_backend_elastic_ip_name,
-    get_database_elastic_ip_name
+    get_database_elastic_ip_name,
+    get_backend_vpn_gateway_elastic_ip_name
 )
 
 class Backend():
@@ -23,7 +24,7 @@ class Backend():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend/user_data.sh'
         )
-        self.VPN_ADDRESS = "14.0.0.2/24"
+        self.VPN_ADDRESS = "192.168.69.2/24"
         self._prepare_resources()
         self.keys()
 
@@ -42,6 +43,10 @@ class Backend():
         # Database Elastic IP
         database_elastic_ip_name = get_database_elastic_ip_name()
         self.database_elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
+
+        # Gateway Elastic IP
+        gateway_elastic_ip_name = get_backend_vpn_gateway_elastic_ip_name()
+        self.gateway_elastic_ip = ElasticIP(self.aws_client, gateway_elastic_ip_name)
 
         # Vpn Keys
         self.keys = Keys()
@@ -77,6 +82,11 @@ class Backend():
             print('[INFO] Database elastic ip not found, creating one now ...')
             self.database_elastic_ip.create()
         
+        self.gateway_elastic_ip.get_ip()
+        if self.gateway.elastic_ip.ip is None:
+            print('[INFO] Gateway elastic ip not found, creating one now ...')
+            self.gateway_elastic_ip.create()
+
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$APPLICATION_PRIVATE_KEY', self.keys.private_key)
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
