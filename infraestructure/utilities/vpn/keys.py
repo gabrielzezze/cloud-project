@@ -14,6 +14,6 @@ class Keys():
         result = subprocess.run([self.GEN_KEYS_SCRIPT_PATH], stdout=subprocess.PIPE)
         result = result.stdout.decode('utf-8')
         keys = result.split('~')
-        self.private_key = keys[0]
-        self.public_key = keys[1]
+        self.private_key = keys[0].replace('\n', '')
+        self.public_key = keys[1].replace('\n', '')
 

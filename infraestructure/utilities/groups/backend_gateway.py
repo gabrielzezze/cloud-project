@@ -64,11 +64,10 @@ class BackendGateway():
             user_data_script = '\n'.join(script_file)
 
         if user_data_script is not None:
-            user_data_script.replace('$SERVER_PRIVATE_KEY', self.keys.private_key)
-            user_data_script.replace('$APPLICATION_PUBLIC_KEY', application_keys.public_key)
-            user_data_script.replace('$DATABASE_PUBLIC_KEY', database_keys.public_key)
-            print(user_data_script)
-            self.ec2.create(self.security_group.id, image_id)
+            user_data_script = user_data_script.replace('$SERVER_PRIVATE_KEY', self.keys.private_key)
+            user_data_script = user_data_script.replace('$APPLICATION_PUBLIC_KEY', application_keys.public_key)
+            user_data_script = user_data_script.replace('$DATABASE_PUBLIC_KEY', database_keys.public_key)
+            self.ec2.create(self.security_group.id, image_id, user_data=user_data_script)
 
     def _handle_elastic_ip_association(self):
         instance_id = self.ec2.id
