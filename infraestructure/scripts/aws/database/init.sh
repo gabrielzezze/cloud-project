@@ -1,10 +1,3 @@
-# Update System
-sudo apt update
-sudo apt upgrade -y
-
-# Install Wireguard
-sudo apt install wireguard -y
-
 # Install docker
 sudo apt remove docker docker-engine docker.io containerd runc -y
 sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y

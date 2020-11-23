@@ -100,18 +100,6 @@ class Database():
         if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
             self.elastic_ip.create()
     
-    def initialize_vpn(self):
-        print(self.ec2.id)
-        res = self.ssm_client.send_command(
-            InstanceIds=[self.ec2.id],
-            DocumentName='AWS-RunShellScript',
-            Parameters={
-                'commands': [
-                    'sudo systemctl enable wg-quick@client',
-                    'sudo wg-quick up client'
-                 ]}
-        )
-        print(res)
 
     def __call__(self, gateway_keys):
         print('Destroy Previuous env...')

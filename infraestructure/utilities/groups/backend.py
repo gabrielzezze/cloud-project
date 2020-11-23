@@ -69,6 +69,7 @@ class Backend():
         security_group = self.security_group.create('Backend Security Group')
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=5000, ToPort=5000)
+        security_group.authorize_ingress(IpProtocol="udp", CidrIp="0.0.0.0/0", FromPort=51820, ToPort=51820)
     
     def _handle_ec2_instance(self, gateway_keys):
         image_id = get_backend_image_id()
@@ -94,8 +95,7 @@ class Backend():
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
             user_data_script = user_data_script.replace('$DATABASE_IP', self.database_elastic_ip.ip)
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
-            print(user_data_script)
-            self.ec2.create(self.security_group.id, image_id)
+            self.ec2.create(self.security_group.id, image_id, user_data_script)
 
 
     def _handle_elastic_ip_association(self):
@@ -112,18 +112,6 @@ class Backend():
 
         if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
             self.elastic_ip.create()
-
-    def initialize_vpn(self):
-        res = self.ssm_client.send_command(
-            InstanceIds=[self.ec2.id],
-            DocumentName='AWS-RunShellScript',
-            Parameters={
-                'commands': [
-                    'sudo systemctl enable wg-quick@client',
-                    'sudo wg-quick up client'
-                 ]}
-        )
-        print(res)
 
     def __call__(self, gateway_keys):
         print('__BACKEND APPLICATION__')
