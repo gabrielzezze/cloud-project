@@ -9,11 +9,10 @@
 echo "Gateway IP: ${1}"
 echo "Application IP: ${2}"
 echo "Database IP: ${3}"
-echo "SSH Key Password for SCP Transfers (.conf files are transfered to respectivi instances by SCP):"
-# read -s password
+echo "SSH Key Location: ${4}"
 
 # Clean Env
-sudo rm -rf ./vpn-creation-sandbox
+rm -rf ./vpn-creation-sandbox
 
 # Create sandbox folder
 mkdir ./vpn-creation-sandbox
@@ -49,6 +48,6 @@ rm -rf ./client-temp.conf
 cd ..
 
 # Send files to respctive remote instances
-sshpass -p "$password" scp ./gateway/* ubuntu@$1:/etc/wireguard/
-sshpass -p "$password" scp ./application/* ubuntu@$2:/etc/wireguard/
-sshpass -p "$password" scp ./database/* ubuntu@$3:/etc/wireguard/
+scp -i $4 ./gateway/* ubuntu@$1:/home/ubuntu/
+# scp -i $4 ./application/* ubuntu@$2:/home/ubuntu/wireguard/
+# scp -i $4 ./database/* ubuntu@$3:/home/ubuntu/wireguard/

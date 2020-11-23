@@ -1,6 +1,7 @@
 from utilities.aws_resources.ec2 import EC2
 from utilities.aws_resources.elastic_ip import ElasticIP
 from utilities.aws_resources.security_group import SecurityGroup
+from utilities.vpn.keys import Keys
 import os
 from constants.aws import (
     get_backend_security_group_name, 
@@ -22,8 +23,8 @@ class Backend():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend/user_data.sh'
         )
-
         self._prepare_resources()
+        self.keys()
 
     def _prepare_resources(self):
         # EC2
@@ -40,6 +41,9 @@ class Backend():
         # Database Elastic IP
         database_elastic_ip_name = get_database_elastic_ip_name()
         self.database_elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
+
+        # Vpn Keys
+        self.keys = Keys()
 
 
     def _destroy_previous_env(self):
@@ -60,7 +64,7 @@ class Backend():
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=5000, ToPort=5000)
     
-    def _handle_ec2_instance(self):
+    def _handle_ec2_instance(self, gateway_keys):
         image_id = get_backend_image_id()
 
         user_data_script = None
@@ -93,10 +97,19 @@ class Backend():
         if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
             self.elastic_ip.create()
 
-    def _handle_auto_scalling(self):
-        pass
+    def initialize_vpn(self):
+        res = self.ssm_client.send_command(
+            InstanceIds=[self.ec2.id],
+            DocumentName='AWS-RunShellScript',
+            Parameters={
+                'commands': [
+                    'sudo systemctl enable wg-quick@client',
+                    'sudo wg-quick up client'
+                 ]}
+        )
+        print(res)
 
-    def __call__(self):
+    def __call__(self, gateway_keys):
         print('Destroing previous env...')
         self._destroy_previous_env()
 
@@ -104,7 +117,9 @@ class Backend():
         self._handle_security_group()
 
         print('Creating EC2 insances...')
-        self._handle_ec2_instance()
+        self._handle_ec2_instance(
+            gateway_keys=gateway_keys
+        )
         
         print('Waiting for instances...')
         running_waiter = self.aws_client.get_waiter('instance_running')

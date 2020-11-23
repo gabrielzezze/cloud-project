@@ -1,6 +1,7 @@
 from utilities.aws_resources.ec2 import EC2
 from utilities.aws_resources.elastic_ip import ElasticIP
 from utilities.aws_resources.security_group import SecurityGroup
+from utilities.vpn.keys import Keys
 import os
 from constants.aws import (
     get_database_security_group_name,
@@ -13,6 +14,7 @@ class Database():
     def __init__(self,  aws_client, ec2_client):
         self.ec2_client = ec2_client
         self.aws_client = aws_client
+
         self.ec2 = None
         self.security_group = None
         self.DATABASE_MACHINE_NAME = "zezze-mysql-database"
@@ -22,6 +24,7 @@ class Database():
         )
 
         self._prepare_resources()
+        self.keys()
 
     def _prepare_resources(self):
         # EC2 Resource
@@ -38,6 +41,9 @@ class Database():
         # Elastic Ip
         database_elastic_ip_name = get_database_elastic_ip_name()
         self.elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
+
+        # VPN Keys
+        self.keys = Keys()
         
 
 
@@ -66,7 +72,7 @@ class Database():
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp=f"{self.backend_elastic_ip.ip}/32", FromPort=80, ToPort=80)
         
-    def _handle_ec2_instance(self):
+    def _handle_ec2_instance(self, gateway_keys):
         image_id = get_database_image_id()
 
         user_data_script = None
@@ -94,7 +100,20 @@ class Database():
         if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
             self.elastic_ip.create()
     
-    def __call__(self):
+    def initialize_vpn(self):
+        print(self.ec2.id)
+        res = self.ssm_client.send_command(
+            InstanceIds=[self.ec2.id],
+            DocumentName='AWS-RunShellScript',
+            Parameters={
+                'commands': [
+                    'sudo systemctl enable wg-quick@client',
+                    'sudo wg-quick up client'
+                 ]}
+        )
+        print(res)
+
+    def __call__(self, gateway_keys):
         print('Destroy Previuous env...')
         self._destroy_previous_env()
 
@@ -102,7 +121,9 @@ class Database():
         self._handle_security_group()
 
         print('Create EC2 instance...')
-        self._handle_ec2_instance()
+        self._handle_ec2_instance(
+            gateway_keys=gateway_keys
+        )
 
         print('Waiting Instance ...')
         running_waiter = self.aws_client.get_waiter('instance_running')

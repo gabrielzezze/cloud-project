@@ -60,6 +60,10 @@ def get_database_elastic_ip_name():
     return DATABASE_ELASTIC_IP_NAME
 
 # Backend VPN
+BACKEND_VPN_GATEWAY_ELASTIC_IP_NAME = 'zezze-backend-vpn-gateway-elastic-ip'
+def get_backend_vpn_gateway_elastic_ip_name():
+    return BACKEND_VPN_GATEWAY_ELASTIC_IP_NAME
+
 BACKEND_VPN_GATEWAY_NAME = 'zezze-backend-vpn-gateway'
 def get_backend_vpn_gateway_name():
     return BACKEND_VPN_GATEWAY_NAME
