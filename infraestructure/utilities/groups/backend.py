@@ -83,7 +83,7 @@ class Backend():
             self.database_elastic_ip.create()
         
         self.gateway_elastic_ip.get_ip()
-        if self.gateway.elastic_ip.ip is None:
+        if self.gateway_elastic_ip.ip is None:
             print('[INFO] Gateway elastic ip not found, creating one now ...')
             self.gateway_elastic_ip.create()
 
@@ -91,6 +91,7 @@ class Backend():
             user_data_script = user_data_script.replace('$APPLICATION_PRIVATE_KEY', self.keys.private_key)
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
             user_data_script = user_data_script.replace('$VPN_ADDRESS', self.VPN_ADDRESS)
+            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
             user_data_script = user_data_script.replace('$DATABASE_IP', self.database_elastic_ip.ip)
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
             print(user_data_script)

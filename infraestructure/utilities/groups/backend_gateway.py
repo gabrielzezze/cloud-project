@@ -55,6 +55,7 @@ class BackendGateway():
     def _handle_security_group(self):
         security_group = self.security_group.create('Backend VPN Security Group')
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
+        security_group.authorize_ingress(IpProtocol="udp", CidrIp="0.0.0.0/0", FromPort=51820, ToPort=51820)
 
     def _handle_ec2_instances(self, application_keys, database_keys):
         image_id = get_backend_vpn_gateway_image_id()

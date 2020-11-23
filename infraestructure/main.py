@@ -27,7 +27,11 @@ def handle_backend_infraestructrue():
 
     backend_gateway(application.keys, database.keys)
     application(backend_gateway.keys)
-
+    print(application.keys.public_key)
+    print(application.keys.private_key)
+    print('\n')
+    print(backend_gateway.keys.public_key)
+    print(backend_gateway.keys.private_key)
     # database()
     # application()
 

@@ -13,6 +13,7 @@ sudo apt install wireguard -y
 # Enable Ip forwarding
 echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
+sudo echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
 
 # Get template files
 git clone https://github.com/gabrielzezze/cloud-project.git
