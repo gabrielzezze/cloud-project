@@ -2,6 +2,7 @@
 # Vars, will be replaced by code
 application_private_key="$APPLICATION_PRIVATE_KEY"
 gateway_public_key="$GATEWAY_PUBLIC_KEY"
+vpn_address="$VPN_ADDRESS"
 
 # Update System
 sudo apt update
@@ -16,7 +17,7 @@ git clone https://github.com/gabrielzezze/cloud-project.git
 # Wireguard config
 cp ./cloud-project/infraestructure/scripts/vpn/client_template.conf ./client-template.conf
 touch ./client.conf
-sed -e "s~$(echo 'private_key')~${application_private_key}~g" -e "s~$(echo 'server_public_key')~${gateway_public_key}~g" ./client-template.conf > ./client.conf
+sed -e "s~$(echo 'private_key')~${application_private_key}~g" -e "s~$(echo 'server_public_key')~${gateway_public_key}~g" -e "s~$(echo 'vpn_address')~${vpn_address}~g"  ./client-template.conf > ./client.conf
 sudo cp ./client.conf /etc/wireguard/client.conf
 sudo systemctl enable wg-quick@client
 sudo wg-quick up client

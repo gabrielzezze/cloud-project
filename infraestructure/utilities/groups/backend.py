@@ -82,7 +82,7 @@ class Backend():
             user_data_script = user_data_script.replace('$DATABASE_IP', self.database_elastic_ip.ip)
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
             print(user_data_script)
-            self.ec2.create(self.security_group.id, image_id, user_data_script)
+            self.ec2.create(self.security_group.id, image_id)
 
 
     def _handle_elastic_ip_association(self):
