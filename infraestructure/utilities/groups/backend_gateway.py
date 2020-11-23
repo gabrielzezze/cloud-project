@@ -86,7 +86,7 @@ class BackendGateway():
 
 
     def __call__(self, application_keys, database_keys):
-        print('Backend Gateway')
+        print('__BACKEND GATEWAY__')
 
         print('Cleaning previous env...')
         self._destroy_previous_env()
@@ -109,4 +109,4 @@ class BackendGateway():
         print('Allocating Elastic IP...')
         self._handle_elastic_ip_association()
 
-        print('Done :)')
+        print('Done :) \n')

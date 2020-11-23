@@ -1,6 +1,11 @@
 #!/bin/bash
+# Vars, will be replaced by code
 application_private_key="$APPLICATION_PRIVATE_KEY"
 gateway_public_key="$GATEWAY_PUBLIC_KEY"
+
+# Update System
+sudo apt update
+sudo apt upgrade -y
 
 # Install Wireguard
 sudo apt install wireguard -y

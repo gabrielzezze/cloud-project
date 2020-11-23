@@ -25,7 +25,8 @@ def handle_backend_infraestructrue():
     database = Database(aws_client, ec2_client)
     application = Backend(aws_client, ec2_client)
 
-    backend_gateway(application.keys, database.keys)
+    # backend_gateway(application.keys, database.keys)
+    application(backend_gateway.keys)
 
     # database()
     # application()

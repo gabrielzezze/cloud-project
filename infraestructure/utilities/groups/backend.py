@@ -77,8 +77,11 @@ class Backend():
             self.database_elastic_ip.create()
         
         if user_data_script is not None:
+            user_data_script = user_data_script.replace('$APPLICATION_PRIVATE_KEY', self.keys.private_key)
+            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
             user_data_script = user_data_script.replace('$DATABASE_IP', self.database_elastic_ip.ip)
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
+            print(user_data_script)
             self.ec2.create(self.security_group.id, image_id, user_data_script)
 
 
@@ -110,6 +113,7 @@ class Backend():
         print(res)
 
     def __call__(self, gateway_keys):
+        print('__BACKEND APPLICATION__')
         print('Destroing previous env...')
         self._destroy_previous_env()
 
@@ -129,4 +133,6 @@ class Backend():
         self._handle_elastic_ip_creation()
         print('Allocating Elastic IP...')
         self._handle_elastic_ip_association()
+
+        print('Done :) \n')
 

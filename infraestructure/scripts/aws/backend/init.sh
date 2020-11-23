@@ -1,6 +1,3 @@
-# Update System
-sudo apt update
-sudo apt upgrade -y
 
 # Install Node + yarn + npm
 # -Node + Npm
