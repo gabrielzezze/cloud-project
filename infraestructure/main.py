@@ -26,15 +26,17 @@ def handle_backend_infraestructrue():
     application = Backend(aws_client, ec2_client)
 
     backend_gateway(application.keys, database.keys)
+    database(backend_gateway.keys)
     application(backend_gateway.keys)
+
     print(application.keys.public_key)
     print(application.keys.private_key)
     print('\n')
     print(backend_gateway.keys.public_key)
     print(backend_gateway.keys.private_key)
-    # database()
-    # application()
-
+    print('\n')
+    print(database.keys.private_key)
+    print(database.keys.public_key)
 
 
 

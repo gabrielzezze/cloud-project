@@ -7,7 +7,8 @@ from constants.aws import (
     get_database_security_group_name,
     get_backend_elastic_ip_name,
     get_database_image_id,
-    get_database_elastic_ip_name
+    get_database_elastic_ip_name,
+    get_backend_vpn_gateway_elastic_ip_name
 )
 
 class Database():
@@ -18,6 +19,7 @@ class Database():
         self.ec2 = None
         self.security_group = None
         self.DATABASE_MACHINE_NAME = "zezze-mysql-database"
+        self.VPN_ADDRESS = "192.168.69.3/24"
         self.USER_DATA_SCRIPT_PATH = os.path.join(
             os.path.dirname(__file__), 
             '../../scripts/aws/database/user_data.sh'
@@ -41,6 +43,10 @@ class Database():
         # Elastic Ip
         database_elastic_ip_name = get_database_elastic_ip_name()
         self.elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
+        
+        # Gateway Elastic IP
+        gateway_elastic_ip_name = get_backend_vpn_gateway_elastic_ip_name()
+        self.gateway_elastic_ip = ElasticIP(self.aws_client, gateway_elastic_ip_name)
 
         # VPN Keys
         self.keys = Keys()
@@ -79,8 +85,18 @@ class Database():
         with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
             user_data_script = '\n'.join(script_file)
 
+        self.gateway_elastic_ip.get_ip()
+        if self.gateway_elastic_ip.ip is None:
+            print('[INFO] Gateway elastic ip not found, creating one now ...')
+            self.gateway_elastic_ip.create()
+
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$MYSQL_ROOT_PASSWORD', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
+            user_data_script = user_data_script.replace('$DATABASE_PRIVATE_KEY', self.keys.private_key)
+            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
+            user_data_script = user_data_script.replace('$VPN_ADDRESS', self.VPN_ADDRESS)
+            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
+            print(user_data_script)
             self.ec2.create(self.security_group.id, image_id, user_data_script)
         else:
             print('[ Error ] Unable to read user data')
@@ -102,6 +118,7 @@ class Database():
     
 
     def __call__(self, gateway_keys):
+        print('__DATABASE__')
         print('Destroy Previuous env...')
         self._destroy_previous_env()
 

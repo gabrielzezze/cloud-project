@@ -93,7 +93,7 @@ class Backend():
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
             user_data_script = user_data_script.replace('$VPN_ADDRESS', self.VPN_ADDRESS)
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
-            user_data_script = user_data_script.replace('$DATABASE_IP', self.database_elastic_ip.ip)
+            user_data_script = user_data_script.replace('$DATABASE_IP', '192.168.69.3')
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
             self.ec2.create(self.security_group.id, image_id, user_data_script)
 
