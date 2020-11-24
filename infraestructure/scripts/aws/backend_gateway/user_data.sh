@@ -12,6 +12,7 @@ sudo apt install wireguard -y
 
 # Enable Ip forwarding
 echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf
+echo 1 > /proc/sys/net/ipv4/ip_forward
 sudo sysctl -p
 sudo echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
 

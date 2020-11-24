@@ -19,7 +19,7 @@ class Database():
         self.ec2 = None
         self.security_group = None
         self.DATABASE_MACHINE_NAME = "zezze-mysql-database"
-        self.VPN_ADDRESS = "192.168.69.3/24"
+        self.VPN_ADDRESS = "14.0.0.3"
         self.USER_DATA_SCRIPT_PATH = os.path.join(
             os.path.dirname(__file__), 
             '../../scripts/aws/database/user_data.sh'
@@ -92,9 +92,8 @@ class Database():
             user_data_script = user_data_script.replace('$MYSQL_ROOT_PASSWORD', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
             user_data_script = user_data_script.replace('$DATABASE_PRIVATE_KEY', self.keys.private_key)
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
-            user_data_script = user_data_script.replace('$VPN_ADDRESS', self.VPN_ADDRESS)
+            user_data_script = user_data_script.replace('$VPN_ADDRESS', f'{self.VPN_ADDRESS}/24')
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
-            print(user_data_script)
             self.ec2.create(self.security_group.id, image_id, user_data_script)
         else:
             print('[ Error ] Unable to read user data')
