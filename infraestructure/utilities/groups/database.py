@@ -74,9 +74,7 @@ class Database():
             print('[INFO] Backend elastic ip not found, creating one now ...')
             self.backend_elastic_ip.create()
         
-        # CidrIp=f"{backend_ip}/32"
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp=f"{self.backend_elastic_ip.ip}/32", FromPort=80, ToPort=80)
         
     def _handle_ec2_instance(self, gateway_keys):
         image_id = get_database_image_id()

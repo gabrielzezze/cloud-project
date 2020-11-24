@@ -27,7 +27,7 @@ def handle_backend_infraestructrue():
 
     backend_gateway(application.keys, database.keys)
     database(backend_gateway.keys)
-    application(backend_gateway.keys)
+    application(backend_gateway.keys, database.VPN_ADDRESS)
 
     print(application.keys.public_key)
     print(application.keys.private_key)

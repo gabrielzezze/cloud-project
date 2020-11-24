@@ -68,10 +68,9 @@ class Backend():
     def _handle_security_group(self):
         security_group = self.security_group.create('Backend Security Group')
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=5000, ToPort=5000)
-        security_group.authorize_ingress(IpProtocol="udp", CidrIp="0.0.0.0/0", FromPort=51820, ToPort=51820)
-    
-    def _handle_ec2_instance(self, gateway_keys):
+
+
+    def _handle_ec2_instance(self, gateway_keys, database_vpn_address):
         image_id = get_backend_image_id()
 
         user_data_script = None
@@ -93,7 +92,7 @@ class Backend():
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
             user_data_script = user_data_script.replace('$VPN_ADDRESS', self.VPN_ADDRESS)
             user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
-            user_data_script = user_data_script.replace('$DATABASE_IP', '192.168.69.3')
+            user_data_script = user_data_script.replace('$DATABASE_IP', database_vpn_address)
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
             self.ec2.create(self.security_group.id, image_id, user_data_script)
 
@@ -113,7 +112,7 @@ class Backend():
         if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
             self.elastic_ip.create()
 
-    def __call__(self, gateway_keys):
+    def __call__(self, gateway_keys, database_vpn_address):
         print('__BACKEND APPLICATION__')
         print('Destroing previous env...')
         self._destroy_previous_env()
@@ -123,7 +122,8 @@ class Backend():
 
         print('Creating EC2 insances...')
         self._handle_ec2_instance(
-            gateway_keys=gateway_keys
+            gateway_keys=gateway_keys,
+            database_vpn_address=database_vpn_address
         )
         
         print('Waiting for instances...')
