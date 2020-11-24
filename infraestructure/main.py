@@ -29,14 +29,6 @@ def handle_backend_infraestructrue():
     database(backend_gateway.keys)
     application(backend_gateway.keys, database.VPN_ADDRESS)
 
-    print(application.keys.public_key)
-    print(application.keys.private_key)
-    print('\n')
-    print(backend_gateway.keys.public_key)
-    print(backend_gateway.keys.private_key)
-    print('\n')
-    print(database.keys.private_key)
-    print(database.keys.public_key)
 
 
 
