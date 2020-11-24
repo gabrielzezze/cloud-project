@@ -37,12 +37,12 @@ class Backend():
         self.security_group = SecurityGroup(self.aws_client, self.ec2_client, security_group_name)
 
         # Elastic IP
-        elastic_ip_name = get_backend_elastic_ip_name()
-        self.elastic_ip = ElasticIP(self.aws_client, elastic_ip_name)
+        # elastic_ip_name = get_backend_elastic_ip_name()
+        # self.elastic_ip = ElasticIP(self.aws_client, elastic_ip_name)
 
         # Database Elastic IP
-        database_elastic_ip_name = get_database_elastic_ip_name()
-        self.database_elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
+        # database_elastic_ip_name = get_database_elastic_ip_name()
+        # self.database_elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
 
         # Gateway Elastic IP
         gateway_elastic_ip_name = get_backend_vpn_gateway_elastic_ip_name()
@@ -77,10 +77,10 @@ class Backend():
         with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
             user_data_script = '\n'.join(script_file)
 
-        self.database_elastic_ip.get_ip()
-        if self.database_elastic_ip.ip is None:
-            print('[INFO] Database elastic ip not found, creating one now ...')
-            self.database_elastic_ip.create()
+        # self.database_elastic_ip.get_ip()
+        # if self.database_elastic_ip.ip is None:
+        #     print('[INFO] Database elastic ip not found, creating one now ...')
+        #     self.database_elastic_ip.create()
         
         self.gateway_elastic_ip.get_ip()
         if self.gateway_elastic_ip.ip is None:
@@ -130,10 +130,10 @@ class Backend():
         running_waiter = self.aws_client.get_waiter('instance_running')
         running_waiter.wait(InstanceIds=[self.ec2.id])
         
-        print('Creating Elastic IP if needed...')
-        self._handle_elastic_ip_creation()
-        print('Allocating Elastic IP...')
-        self._handle_elastic_ip_association()
+        # print('Creating Elastic IP if needed...')
+        # self._handle_elastic_ip_creation()
+        # print('Allocating Elastic IP...')
+        # self._handle_elastic_ip_association()
 
         print('Done :) \n')
 

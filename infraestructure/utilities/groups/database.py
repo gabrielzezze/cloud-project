@@ -37,12 +37,12 @@ class Database():
         self.security_group = SecurityGroup(self.aws_client, self.ec2_client, security_group_name)
 
         # Backend Elastic Ip
-        backend_elastic_ip_name = get_backend_elastic_ip_name()
-        self.backend_elastic_ip = ElasticIP(self.aws_client, backend_elastic_ip_name)
+        # backend_elastic_ip_name = get_backend_elastic_ip_name()
+        # self.backend_elastic_ip = ElasticIP(self.aws_client, backend_elastic_ip_name)
 
         # Elastic Ip
-        database_elastic_ip_name = get_database_elastic_ip_name()
-        self.elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
+        # database_elastic_ip_name = get_database_elastic_ip_name()
+        # self.elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
         
         # Gateway Elastic IP
         gateway_elastic_ip_name = get_backend_vpn_gateway_elastic_ip_name()
@@ -69,10 +69,10 @@ class Database():
     def _handle_security_group(self):
         security_group = self.security_group.create('Database security group')
         
-        self.backend_elastic_ip.get_ip()
-        if self.backend_elastic_ip.ip is None:
-            print('[INFO] Backend elastic ip not found, creating one now ...')
-            self.backend_elastic_ip.create()
+        # self.backend_elastic_ip.get_ip()
+        # if self.backend_elastic_ip.ip is None:
+        #     print('[INFO] Backend elastic ip not found, creating one now ...')
+        #     self.backend_elastic_ip.create()
         
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
         
@@ -131,9 +131,9 @@ class Database():
         running_waiter = self.aws_client.get_waiter('instance_running')
         running_waiter.wait(InstanceIds=[self.ec2.id])
 
-        print('Creating Elastic IP if needed...')
-        self._handle_elastic_ip_creation()
-        print('Allocating Elastic IP...')
-        self._handle_elastic_ip_association()
+        # print('Creating Elastic IP if needed...')
+        # self._handle_elastic_ip_creation()
+        # print('Allocating Elastic IP...')
+        # self._handle_elastic_ip_association()
 
         print('Done')
