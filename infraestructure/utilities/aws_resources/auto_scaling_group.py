@@ -34,6 +34,11 @@ class AutoScalingGroup():
                     'Key': 'Type',
                     'Value': self.group,
                     'PropagateAtLaunch': True
+                },
+                {
+                    'Key': 'Name',
+                    'Value': f'zezze-{self.group}-instance',
+                    'PropagateAtLaunch': True
                 }
             ]
         )
