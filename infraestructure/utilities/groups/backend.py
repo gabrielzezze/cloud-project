@@ -13,9 +13,13 @@ from constants.aws import (
 )
 
 class Backend():
-    def __init__(self, aws_client, ec2_client):
+    def __init__(self, aws_client, ec2_client, vpc_id, private_subnet, public_subnet):
         self.aws_client = aws_client
         self.ec2_client = ec2_client
+
+        self.vpc_id = vpc_id
+        self.private_subnet = private_subnet
+        self.public_subnet = public_subnet
 
         self.BACKEND_MACHINES_NAMES = [
             'zezze-backend-0'
@@ -24,13 +28,13 @@ class Backend():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend/user_data.sh'
         )
-        self.VPN_ADDRESS = "14.0.0.2"
+        self.PRIVATE_IP_ADDRESS = "14.0.1.1/24"
         self._prepare_resources()
         self.keys()
 
     def _prepare_resources(self):
         # EC2
-        self.ec2 = EC2(self.ec2_client, self.BACKEND_MACHINES_NAMES[0], 'backend')
+        self.ec2 = EC2(self.ec2_client, self.BACKEND_MACHINES_NAMES[0], 'backend', subnet_id=self.private_subnet.id, private_ip_address=self.PRIVATE_IP_ADDRESS)
 
         # Security Group
         security_group_name = get_backend_security_group_name()
@@ -67,7 +71,7 @@ class Backend():
 
     def _handle_security_group(self):
         security_group = self.security_group.create('Backend Security Group')
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp=self.public_subnet.cidr_block, FromPort=5000, ToPort=5000)
 
 
     def _handle_ec2_instance(self, gateway_keys, database_vpn_address):

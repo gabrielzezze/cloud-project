@@ -25,7 +25,6 @@ class Database():
         self.ec2 = None
         self.security_group = None
         self.DATABASE_MACHINE_NAME = "zezze-mysql-database"
-        self.VPN_ADDRESS = "14.0.0.3"
         self.USER_DATA_SCRIPT_PATH = os.path.join(
             os.path.dirname(__file__), 
             '../../scripts/aws/database/user_data.sh'
@@ -36,7 +35,7 @@ class Database():
 
     def _prepare_resources(self):
         # EC2 Resource
-        self.ec2 = EC2(self.ec2_client, self.DATABASE_MACHINE_NAME, 'DATABASE')
+        self.ec2 = EC2(self.ec2_client, self.DATABASE_MACHINE_NAME, 'database', subnet_id=self.private_subnet.id, private_ip_address=self.PRIVATE_IP_ADDRESS)
 
         # Database Resource
         security_group_name = get_database_security_group_name()
@@ -91,10 +90,6 @@ class Database():
 
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$MYSQL_ROOT_PASSWORD', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
-            user_data_script = user_data_script.replace('$DATABASE_PRIVATE_KEY', self.keys.private_key)
-            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
-            user_data_script = user_data_script.replace('$VPN_ADDRESS', f'{self.VPN_ADDRESS}/24')
-            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
             self.ec2.create(self.security_group.id, image_id, user_data_script)
         else:
             print('[ Error ] Unable to read user data')
