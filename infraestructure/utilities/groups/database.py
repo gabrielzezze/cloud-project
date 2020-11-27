@@ -12,14 +12,19 @@ from constants.aws import (
 )
 
 class Database():
-    def __init__(self,  aws_client, ec2_client):
+    def __init__(self,  aws_client, ec2_client, vpc_id, private_subnet, public_subnet):
         self.ec2_client = ec2_client
         self.aws_client = aws_client
+
+        self.vpc_id = vpc_id
+        self.private_subnet = private_subnet
+        self.public_subnet = public_subnet
+
+        self.PRIVATE_IP_ADDRESS = '14.0.1.2/24'
 
         self.ec2 = None
         self.security_group = None
         self.DATABASE_MACHINE_NAME = "zezze-mysql-database"
-        self.VPN_ADDRESS = "14.0.0.3"
         self.USER_DATA_SCRIPT_PATH = os.path.join(
             os.path.dirname(__file__), 
             '../../scripts/aws/database/user_data.sh'
@@ -30,7 +35,7 @@ class Database():
 
     def _prepare_resources(self):
         # EC2 Resource
-        self.ec2 = EC2(self.ec2_client, self.DATABASE_MACHINE_NAME, 'DATABASE')
+        self.ec2 = EC2(self.ec2_client, self.DATABASE_MACHINE_NAME, 'database', subnet_id=self.private_subnet.id, private_ip_address=self.PRIVATE_IP_ADDRESS)
 
         # Database Resource
         security_group_name = get_database_security_group_name()
@@ -68,15 +73,10 @@ class Database():
 
     def _handle_security_group(self):
         security_group = self.security_group.create('Database security group')
-        
-        # self.backend_elastic_ip.get_ip()
-        # if self.backend_elastic_ip.ip is None:
-        #     print('[INFO] Backend elastic ip not found, creating one now ...')
-        #     self.backend_elastic_ip.create()
-        
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp=self.private_subnet.cidr_block, FromPort=80, ToPort=80)
         
-    def _handle_ec2_instance(self, gateway_keys):
+    def _handle_ec2_instance(self):
         image_id = get_database_image_id()
 
         user_data_script = None
@@ -90,10 +90,6 @@ class Database():
 
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$MYSQL_ROOT_PASSWORD', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
-            user_data_script = user_data_script.replace('$DATABASE_PRIVATE_KEY', self.keys.private_key)
-            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
-            user_data_script = user_data_script.replace('$VPN_ADDRESS', f'{self.VPN_ADDRESS}/24')
-            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
             self.ec2.create(self.security_group.id, image_id, user_data_script)
         else:
             print('[ Error ] Unable to read user data')
@@ -114,7 +110,7 @@ class Database():
             self.elastic_ip.create()
     
 
-    def __call__(self, gateway_keys):
+    def __call__(self):
         print('__DATABASE__')
         print('Destroy Previuous env...')
         self._destroy_previous_env()
@@ -123,9 +119,7 @@ class Database():
         self._handle_security_group()
 
         print('Create EC2 instance...')
-        self._handle_ec2_instance(
-            gateway_keys=gateway_keys
-        )
+        self._handle_ec2_instance()
 
         print('Waiting Instance ...')
         running_waiter = self.aws_client.get_waiter('instance_running')

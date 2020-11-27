@@ -3,6 +3,7 @@ from utilities.groups.frontend import Frontend
 from utilities.groups.backend import Backend
 from utilities.groups.database import Database
 from utilities.groups.backend_gateway import BackendGateway
+from utilities.groups.backend_vpc import BackendVPC
 import os
 import boto3
 import sys
@@ -21,22 +22,16 @@ def handle_backend_infraestructrue():
     aws_client = init_aws_client('ec2', 'us-east-2')
     ec2_client = boto3.resource('ec2', region_name='us-east-2')
 
+    vpc = BackendVPC(aws_client, ec2_client)
+    vpc_id, private_subnet, public_subnet = vpc()
     backend_gateway = BackendGateway(aws_client, ec2_client)
     database = Database(aws_client, ec2_client)
     application = Backend(aws_client, ec2_client)
 
     backend_gateway(application.keys, database.keys)
-    database(backend_gateway.keys)
-    application(backend_gateway.keys, database.VPN_ADDRESS)
+    # database(backend_gateway.keys)
+    # application(backend_gateway.keys, database.VPN_ADDRESS)
 
-    print(application.keys.public_key)
-    print(application.keys.private_key)
-    print('\n')
-    print(backend_gateway.keys.public_key)
-    print(backend_gateway.keys.private_key)
-    print('\n')
-    print(database.keys.private_key)
-    print(database.keys.public_key)
 
 
 

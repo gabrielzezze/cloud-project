@@ -13,9 +13,13 @@ from constants.aws import (
 )
 
 class Backend():
-    def __init__(self, aws_client, ec2_client):
+    def __init__(self, aws_client, ec2_client, vpc_id, private_subnet, public_subnet):
         self.aws_client = aws_client
         self.ec2_client = ec2_client
+
+        self.vpc_id = vpc_id
+        self.private_subnet = private_subnet
+        self.public_subnet = public_subnet
 
         self.BACKEND_MACHINES_NAMES = [
             'zezze-backend-0'
@@ -24,13 +28,13 @@ class Backend():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend/user_data.sh'
         )
-        self.VPN_ADDRESS = "14.0.0.2"
+        self.PRIVATE_IP_ADDRESS = "14.0.1.1/24"
         self._prepare_resources()
         self.keys()
 
     def _prepare_resources(self):
         # EC2
-        self.ec2 = EC2(self.ec2_client, self.BACKEND_MACHINES_NAMES[0], 'backend')
+        self.ec2 = EC2(self.ec2_client, self.BACKEND_MACHINES_NAMES[0], 'backend', subnet_id=self.private_subnet.id, private_ip_address=self.PRIVATE_IP_ADDRESS)
 
         # Security Group
         security_group_name = get_backend_security_group_name()
@@ -67,31 +71,17 @@ class Backend():
 
     def _handle_security_group(self):
         security_group = self.security_group.create('Backend Security Group')
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp=self.public_subnet.cidr_block, FromPort=5000, ToPort=5000)
 
 
-    def _handle_ec2_instance(self, gateway_keys, database_vpn_address):
+    def _handle_ec2_instance(self, database_vpn_address):
         image_id = get_backend_image_id()
 
         user_data_script = None
         with open(self.USER_DATA_SCRIPT_PATH, 'r') as script_file:
             user_data_script = '\n'.join(script_file)
 
-        # self.database_elastic_ip.get_ip()
-        # if self.database_elastic_ip.ip is None:
-        #     print('[INFO] Database elastic ip not found, creating one now ...')
-        #     self.database_elastic_ip.create()
-        
-        self.gateway_elastic_ip.get_ip()
-        if self.gateway_elastic_ip.ip is None:
-            print('[INFO] Gateway elastic ip not found, creating one now ...')
-            self.gateway_elastic_ip.create()
-
         if user_data_script is not None:
-            user_data_script = user_data_script.replace('$APPLICATION_PRIVATE_KEY', self.keys.private_key)
-            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_KEY', gateway_keys.public_key)
-            user_data_script = user_data_script.replace('$VPN_ADDRESS', f'{self.VPN_ADDRESS}/24')
-            user_data_script = user_data_script.replace('$GATEWAY_PUBLIC_IP', f'{self.gateway_elastic_ip.ip}:51820')
             user_data_script = user_data_script.replace('$DATABASE_IP', database_vpn_address)
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
             self.ec2.create(self.security_group.id, image_id, user_data_script)
@@ -112,7 +102,7 @@ class Backend():
         if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
             self.elastic_ip.create()
 
-    def __call__(self, gateway_keys, database_vpn_address):
+    def __call__(self, database_vpn_address):
         print('__BACKEND APPLICATION__')
         print('Destroing previous env...')
         self._destroy_previous_env()
@@ -122,7 +112,6 @@ class Backend():
 
         print('Creating EC2 insances...')
         self._handle_ec2_instance(
-            gateway_keys=gateway_keys,
             database_vpn_address=database_vpn_address
         )
         
