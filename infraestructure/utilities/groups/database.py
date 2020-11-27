@@ -76,7 +76,7 @@ class Database():
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp=self.private_subnet.cidr_block, FromPort=80, ToPort=80)
         
-    def _handle_ec2_instance(self, gateway_keys):
+    def _handle_ec2_instance(self):
         image_id = get_database_image_id()
 
         user_data_script = None
@@ -110,7 +110,7 @@ class Database():
             self.elastic_ip.create()
     
 
-    def __call__(self, gateway_keys):
+    def __call__(self):
         print('__DATABASE__')
         print('Destroy Previuous env...')
         self._destroy_previous_env()
@@ -119,9 +119,7 @@ class Database():
         self._handle_security_group()
 
         print('Create EC2 instance...')
-        self._handle_ec2_instance(
-            gateway_keys=gateway_keys
-        )
+        self._handle_ec2_instance()
 
         print('Waiting Instance ...')
         running_waiter = self.aws_client.get_waiter('instance_running')
