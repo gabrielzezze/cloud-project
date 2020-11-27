@@ -25,7 +25,7 @@ def handle_backend_infraestructrue():
     vpc = BackendVPC(aws_client, ec2_client)
     vpc_id, private_subnet, public_subnet = vpc()
     backend_gateway = BackendGateway(aws_client, ec2_client)
-    # database = Database(aws_client, ec2_client)
+    database = Database(aws_client, ec2_client)
     # application = Backend(aws_client, ec2_client)
 
     # backend_gateway(application.keys, database.keys)

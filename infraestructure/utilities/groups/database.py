@@ -12,9 +12,15 @@ from constants.aws import (
 )
 
 class Database():
-    def __init__(self,  aws_client, ec2_client):
+    def __init__(self,  aws_client, ec2_client, vpc_id, private_subnet, public_subnet):
         self.ec2_client = ec2_client
         self.aws_client = aws_client
+
+        self.vpc_id = vpc_id
+        self.private_subnet = private_subnet
+        self.public_subnet = public_subnet
+
+        self.PRIVATE_IP_ADDRESS = '14.0.1.2/24'
 
         self.ec2 = None
         self.security_group = None
@@ -68,13 +74,8 @@ class Database():
 
     def _handle_security_group(self):
         security_group = self.security_group.create('Database security group')
-        
-        # self.backend_elastic_ip.get_ip()
-        # if self.backend_elastic_ip.ip is None:
-        #     print('[INFO] Backend elastic ip not found, creating one now ...')
-        #     self.backend_elastic_ip.create()
-        
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp=self.private_subnet.cidr_block, FromPort=80, ToPort=80)
         
     def _handle_ec2_instance(self, gateway_keys):
         image_id = get_database_image_id()
