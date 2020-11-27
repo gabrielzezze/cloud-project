@@ -15,7 +15,7 @@ sudo apt install caddy -y
 cp ./cloud-project/infraestructure/scripts/aws/frontend/Caddyfile-template ./Caddyfile-template
 touch ./Caddyfile
 sed -e "s~$(echo 'frontend-outway-ip')~${frontend_outway_ip}~g" Caddyfile-template > ./Caddyfile
-caddy run &
+sudo caddy run &
 
 # Run application
 chmod +x ./cloud-project/infraestructure/scripts/aws/frontend/init.sh
