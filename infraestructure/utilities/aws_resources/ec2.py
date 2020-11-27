@@ -12,7 +12,7 @@ class EC2():
 
 
     def create(self, sg_id, image_id, user_data=''):
-        if self.subnet_id is None or self.private_ip_address is None:
+        if self.subnet_id is None and self.private_ip_address is None:
             instances = self.ec2_client.create_instances(
                 ImageId  = image_id,
                 MinCount = 1,
@@ -21,6 +21,27 @@ class EC2():
                 KeyName  = 'zezze_key',
                 SecurityGroupIds = [sg_id],
                 UserData=user_data,
+                TagSpecifications = [
+                    {
+                        'ResourceType': 'instance',
+                        'Tags': [ 
+                            { 'Key': 'Name', 'Value': self.name },
+                            { 'Key': 'Owner', 'Value': 'zezze' },
+                            { 'Key': 'Type', 'Value': self.group }
+                        ]
+                    }
+                ]
+            )
+        elif self.subnet_id is not None and self.private_ip_address is None:
+            instances = self.ec2_client.create_instances(
+                ImageId  = image_id,
+                MinCount = 1,
+                MaxCount = 1,
+                InstanceType = self.type,
+                KeyName  = 'zezze_key',
+                SecurityGroupIds = [sg_id],
+                UserData=user_data,
+                SubnetId=self.subnet_id,
                 TagSpecifications = [
                     {
                         'ResourceType': 'instance',

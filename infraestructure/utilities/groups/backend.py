@@ -13,11 +13,11 @@ from constants.aws import (
 )
 
 class Backend():
-    def __init__(self, aws_client, ec2_client, vpc_id, private_subnet, public_subnet):
+    def __init__(self, aws_client, ec2_client, vpc, private_subnet, public_subnet):
         self.aws_client = aws_client
         self.ec2_client = ec2_client
 
-        self.vpc_id = vpc_id
+        self.vpc = vpc
         self.private_subnet = private_subnet
         self.public_subnet = public_subnet
 
@@ -28,7 +28,7 @@ class Backend():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend/user_data.sh'
         )
-        self.PRIVATE_IP_ADDRESS = "14.0.1.1/24"
+        self.PRIVATE_IP_ADDRESS = "14.0.1.40"
         self._prepare_resources()
         self.keys()
 
@@ -38,7 +38,7 @@ class Backend():
 
         # Security Group
         security_group_name = get_backend_security_group_name()
-        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, security_group_name)
+        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, security_group_name, self.vpc.id)
 
         # Elastic IP
         # elastic_ip_name = get_backend_elastic_ip_name()
@@ -66,7 +66,10 @@ class Backend():
             termination_waiter.wait(InstanceIds=deleted_instances_ids)
         
         # Delete security group
-        self.security_group.delete()
+        sgs = self.vpc.security_groups.filter(Filters=[{ "Name": "group-name", 'Values': [self.security_group.name] }])
+        sgs = list(sgs.all())
+        if len(sgs) > 0:
+            self.security_group.delete(sg_id=sgs[0].id)
 
 
     def _handle_security_group(self):

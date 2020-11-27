@@ -24,13 +24,14 @@ def handle_backend_infraestructrue():
 
     vpc = BackendVPC(aws_client, ec2_client)
     vpc_id, private_subnet, public_subnet = vpc()
-    backend_gateway = BackendGateway(aws_client, ec2_client)
-    database = Database(aws_client, ec2_client)
-    application = Backend(aws_client, ec2_client)
 
-    backend_gateway(application.keys, database.keys)
-    # database(backend_gateway.keys)
-    # application(backend_gateway.keys, database.VPN_ADDRESS)
+    backend_gateway = BackendGateway(aws_client, ec2_client, vpc_id, private_subnet, public_subnet)
+    database = Database(aws_client, ec2_client, vpc_id, private_subnet, public_subnet)
+    application = Backend(aws_client, ec2_client, vpc_id, private_subnet, public_subnet)
+
+    # backend_gateway()
+    database()
+    application(database.PRIVATE_IP_ADDRESS)
 
 
 

@@ -12,15 +12,15 @@ from constants.aws import (
 )
 
 class Database():
-    def __init__(self,  aws_client, ec2_client, vpc_id, private_subnet, public_subnet):
+    def __init__(self,  aws_client, ec2_client, vpc, private_subnet, public_subnet):
         self.ec2_client = ec2_client
         self.aws_client = aws_client
 
-        self.vpc_id = vpc_id
+        self.vpc = vpc
         self.private_subnet = private_subnet
         self.public_subnet = public_subnet
 
-        self.PRIVATE_IP_ADDRESS = '14.0.1.2/24'
+        self.PRIVATE_IP_ADDRESS = '14.0.1.30'
 
         self.ec2 = None
         self.security_group = None
@@ -39,7 +39,7 @@ class Database():
 
         # Database Resource
         security_group_name = get_database_security_group_name()
-        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, security_group_name)
+        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, security_group_name, self.vpc.id)
 
         # Backend Elastic Ip
         # backend_elastic_ip_name = get_backend_elastic_ip_name()
@@ -68,7 +68,10 @@ class Database():
             instance_terminated_waiter.wait(InstanceIds=deleted_db_instances)
         
         # Delete security group
-        self.security_group.delete()
+        sgs = self.vpc.security_groups.filter(Filters=[{ "Name": "group-name", 'Values': [self.security_group.name] }])
+        sgs = list(sgs.all())
+        if len(sgs) > 0:
+            self.security_group.delete(sg_id=sgs[0].id)
 
 
     def _handle_security_group(self):

@@ -12,11 +12,11 @@ from constants.aws import (
 )
 
 class BackendGateway():
-    def __init__(self, aws_client, ec2_client, vpc_id, private_subnet, public_subnet):
+    def __init__(self, aws_client, ec2_client, vpc, private_subnet, public_subnet):
         self.aws_client = aws_client
         self.ec2_client = ec2_client
 
-        self.vpc_id = vpc_id
+        self.vpc = vpc
         self.private_subnet = private_subnet
         self.public_subnet = public_subnet
 
@@ -24,7 +24,7 @@ class BackendGateway():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend_gateway/user_data.sh'
         )
-        self.PRIVATE_IP_ADDRESS = '14.0.0.1/24'
+        self.PRIVATE_IP_ADDRESS = '14.0.0.1'
 
         self._prepare_resources()
         self.keys()
@@ -32,10 +32,10 @@ class BackendGateway():
 
     def _prepare_resources(self):
         name = get_backend_vpn_gateway_name()
-        self.ec2 = EC2(self.ec2_client, name, 'backend-gateway', subnet_id=self.public_subnet.id, private_ip_address=self.PRIVATE_IP_ADDRESS)
+        self.ec2 = EC2(self.ec2_client, name, 'backend-gateway', subnet_id=self.public_subnet.id)
 
         sg_name = get_backend_vpn_gateway_security_group_name()
-        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, sg_name)
+        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, sg_name, self.vpc.id)
 
         # Elastic IP
         elastic_ip_name = get_backend_vpn_gateway_elastic_ip_name()
@@ -53,8 +53,12 @@ class BackendGateway():
         if len(deleted_instances_ids) > 0:
             termination_waiter.wait(InstanceIds=deleted_instances_ids)
         
+
         # Delete security group
-        self.security_group.delete()
+        sgs = self.vpc.security_groups.filter(Filters=[{ "Name": "group-name", 'Values': [self.security_group.name] }])
+        sgs = list(sgs.all())
+        if len(sgs) > 0:
+            self.security_group.delete(sg_id=sgs[0].id)
 
 
     def _handle_security_group(self):
@@ -73,6 +77,13 @@ class BackendGateway():
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$SERVER_PRIVATE_KEY', self.keys.private_key)
             self.ec2.create(self.security_group.id, image_id, user_data=user_data_script)
+
+            network_interface = self.ec2_client.network_interfaces.filter(
+                Filters=[{ 'Name': 'group-id', 'Values': [self.security_group.id] }]
+            )
+            if network_interface is not None:
+                network_interface.modify_attribute(SourceDestCheck={ 'Value': False })
+
 
     def _handle_elastic_ip_association(self):
         instance_id = self.ec2.id

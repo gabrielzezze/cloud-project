@@ -20,14 +20,17 @@ class BackendVPC():
         if existing_vpc is None:
             self.nat_gateway_elastic_ip.get_ip()
             print('__BACKEND VPC__')
+
             print('Checking for nat gateway elastic ip...')
             if self.nat_gateway_elastic_ip.allocation_id is None:
                 print('[ INFO ] Natgateway elastic ip not found, creating one now...')
                 self.nat_gateway_elastic_ip.create()
+
             print('Creating vpc...')
             self.vpc.create()
             print('Creating Internet gateway...')
             self.vpc.create_internet_gateway()
+
             print('Creating subnets...')
             self.vpc.create_subnets(self.ec2_client)
             print('Attaching Internet gateway...')
@@ -43,8 +46,8 @@ class BackendVPC():
             print('Handling public route table...')
             self.vpc.handle_public_route_table()
 
-            return self.vpc.vpc.id, self.vpc.public_subnet, self.vpc.private_subnet
-            
+            return self.vpc.vpc, self.vpc.public_subnet, self.vpc.private_subnet
+
         else:
             vpc_id = existing_vpc.get('VpcId', None)
             vpc_resource = self.ec2_resource.Vpc(vpc_id)
@@ -59,4 +62,4 @@ class BackendVPC():
                 elif cidr_block == self.vpc_public_subnet_cidr_block:
                     public_subnet = subnet
             
-            return vpc_id, private_subnet, public_subnet
+            return vpc_resource, private_subnet, public_subnet
