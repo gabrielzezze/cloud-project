@@ -89,6 +89,12 @@ class Backend():
             user_data_script = user_data_script.replace('$DATABASE_PASSWORD', f"{os.getenv('MYSQL_ROOT_PASSWORD')}")
             self.ec2.create(self.security_group.id, image_id, user_data_script)
 
+            network_interface = self.ec2_client.network_interfaces.filter(
+                Filters=[{ 'Name': 'group-id', 'Values': [self.security_group.id] }]
+            )
+            if network_interface is not None:
+                network_interface.modify_attribute(SourceDestCheck={ 'Value': False })
+
 
     def _handle_elastic_ip_association(self):
         instance_id = self.ec2.id

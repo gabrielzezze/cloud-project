@@ -94,6 +94,12 @@ class Database():
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$MYSQL_ROOT_PASSWORD', f"'{os.getenv('MYSQL_ROOT_PASSWORD')}'")
             self.ec2.create(self.security_group.id, image_id, user_data_script)
+            
+            network_interface = self.ec2_client.network_interfaces.filter(
+                Filters=[{ 'Name': 'group-id', 'Values': [self.security_group.id] }]
+            )
+            if network_interface is not None:
+                network_interface.modify_attribute(SourceDestCheck={ 'Value': False })
         else:
             print('[ Error ] Unable to read user data')
 
