@@ -29,9 +29,9 @@ def handle_backend_infraestructrue():
     database = Database(aws_client, ec2_client, vpc_id, private_subnet, public_subnet)
     application = Backend(aws_client, ec2_client, vpc_id, private_subnet, public_subnet)
 
-    # backend_gateway()
-    database()
-    application(database.PRIVATE_IP_ADDRESS)
+    backend_gateway()
+    # database()
+    # application(database.PRIVATE_IP_ADDRESS)
 
 
 

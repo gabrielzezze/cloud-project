@@ -24,7 +24,7 @@ class BackendGateway():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend_gateway/user_data.sh'
         )
-        self.PRIVATE_IP_ADDRESS = '14.0.0.1'
+        self.PRIVATE_IP_ADDRESS = '14.0.0.20'
 
         self._prepare_resources()
         self.keys()
@@ -32,7 +32,7 @@ class BackendGateway():
 
     def _prepare_resources(self):
         name = get_backend_vpn_gateway_name()
-        self.ec2 = EC2(self.ec2_client, name, 'backend-gateway', subnet_id=self.public_subnet.id)
+        self.ec2 = EC2(self.ec2_client, name, 'backend-gateway', subnet_id=self.public_subnet.id, private_ip_address=self.PRIVATE_IP_ADDRESS)
 
         sg_name = get_backend_vpn_gateway_security_group_name()
         self.security_group = SecurityGroup(self.aws_client, self.ec2_client, sg_name, self.vpc.id)
@@ -78,11 +78,12 @@ class BackendGateway():
             user_data_script = user_data_script.replace('$SERVER_PRIVATE_KEY', self.keys.private_key)
             self.ec2.create(self.security_group.id, image_id, user_data=user_data_script)
 
-            network_interface = self.ec2_client.network_interfaces.filter(
+            network_interfaces = self.ec2_client.network_interfaces.filter(
                 Filters=[{ 'Name': 'group-id', 'Values': [self.security_group.id] }]
             )
-            if network_interface is not None:
-                network_interface.modify_attribute(SourceDestCheck={ 'Value': False })
+            network_interfaces = list(network_interfaces)
+            if len(network_interfaces) > 0:
+                network_interfaces[0].modify_attribute(SourceDestCheck={ 'Value': False })
 
 
     def _handle_elastic_ip_association(self):
