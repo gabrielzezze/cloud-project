@@ -3,7 +3,7 @@ http://:80 {
     # More specifically Nollo API's internal load balancer.
     @api path /api/*
     route @api {
-        reverse_proxy $FRONTEND_OUTWAY_IP
+        reverse_proxy frontend-outway-ip
     }
 
     # Any path that matches / or /* will be sent to port 8080, locally.

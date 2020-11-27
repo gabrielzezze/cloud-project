@@ -92,7 +92,7 @@ class Frontend():
     def _handle_frontend_security_group(self):
         security_group = self.security_group.create('Frontend Security Group')
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=8080, ToPort=8080) 
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=80, ToPort=80) 
 
 
     def _handle_frontend_load_balancer(self):
@@ -102,14 +102,14 @@ class Frontend():
         self.load_balancer.create(subnets, self.security_group.id)
 
         vpc_id = list(self.ec2_client.vpcs.all())[0].id
-        self.target_group.create('HTTP', 8080, vpc_id)
+        self.target_group.create('HTTP', 80, vpc_id)
 
         default_actions = [{
                 'TargetGroupArn': self.target_group.arn,
                 'Type': 'forward'
             }]
         self.listener.load_balancer_arn = self.load_balancer.arn
-        self.listener.create(default_actions, 8080, 'HTTP')
+        self.listener.create(default_actions, 80, 'HTTP')
 
 
     def _handle_frontend_launch_configuration(self):
@@ -120,7 +120,7 @@ class Frontend():
             user_data_script = '\n'.join(script_file)
 
         if user_data_script is not None:
-            user_data_script = user_data_script.replace('$API_IP', 'x')
+            user_data_script = user_data_script.replace('$FRONTEND_OUTWAY_IP', 'x')
             print(user_data_script)
         self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data='')
 
