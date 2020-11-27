@@ -12,14 +12,19 @@ from constants.aws import (
 )
 
 class BackendGateway():
-    def __init__(self, aws_client, ec2_client):
+    def __init__(self, aws_client, ec2_client, vpc_id, private_subnet, public_subnet):
         self.aws_client = aws_client
         self.ec2_client = ec2_client
+
+        self.vpc_id = vpc_id
+        self.private_subnet = private_subnet
+        self.public_subnet = public_subnet
 
         self.USER_DATA_SCRIPT_PATH = os.path.join(
             os.path.dirname(__file__), 
             '../../scripts/aws/backend_gateway/user_data.sh'
         )
+        self.PRIVATE_IP_ADDRESS = '14.0.0.1/24'
 
         self._prepare_resources()
         self.keys()
@@ -27,7 +32,7 @@ class BackendGateway():
 
     def _prepare_resources(self):
         name = get_backend_vpn_gateway_name()
-        self.ec2 = EC2(self.ec2_client, name, 'backend-gateway')
+        self.ec2 = EC2(self.ec2_client, name, 'backend-gateway', subnet_id=self.public_subnet.id, private_ip_address=self.PRIVATE_IP_ADDRESS)
 
         sg_name = get_backend_vpn_gateway_security_group_name()
         self.security_group = SecurityGroup(self.aws_client, self.ec2_client, sg_name)
@@ -53,9 +58,9 @@ class BackendGateway():
 
 
     def _handle_security_group(self):
-        security_group = self.security_group.create('Backend VPN Security Group')
+        security_group = self.security_group.create('Backend Gateway Security Group')
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=80, ToPort=80)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp=self.public_subnet.cidr_block, FromPort=80, ToPort=80)
         security_group.authorize_ingress(IpProtocol="udp", CidrIp="0.0.0.0/0", FromPort=51820, ToPort=51820)
 
     def _handle_ec2_instances(self, application_keys, database_keys):

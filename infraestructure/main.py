@@ -23,8 +23,8 @@ def handle_backend_infraestructrue():
     ec2_client = boto3.resource('ec2', region_name='us-east-2')
 
     vpc = BackendVPC(aws_client, ec2_client)
-    vpc('eipalloc-0c1e715d6076bd256')
-    # backend_gateway = BackendGateway(aws_client, ec2_client)
+    vpc_id, private_subnet, public_subnet = vpc()
+    backend_gateway = BackendGateway(aws_client, ec2_client)
     # database = Database(aws_client, ec2_client)
     # application = Backend(aws_client, ec2_client)
 
