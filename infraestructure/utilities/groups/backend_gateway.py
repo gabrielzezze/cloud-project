@@ -67,7 +67,7 @@ class BackendGateway():
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp=self.public_subnet.cidr_block, FromPort=80, ToPort=80)
         security_group.authorize_ingress(IpProtocol="udp", CidrIp="0.0.0.0/0", FromPort=51820, ToPort=51820)
 
-    def _handle_ec2_instances(self):
+    def _handle_ec2_instances(self, frontend_outway_keys, frontend_outway_vpn_address):
         image_id = get_backend_vpn_gateway_image_id()
 
         user_data_script = None
@@ -76,6 +76,8 @@ class BackendGateway():
 
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$SERVER_PRIVATE_KEY', self.keys.private_key)
+            user_data_script = user_data_script.replace('$CLIENT_PUBLIC_KEY', frontend_outway_keys.public_key)
+            user_data_script = user_data_script.replace('$CLIENT_VPN_ADDRESS', frontend_outway_vpn_address)
             self.ec2.create(self.security_group.id, image_id, user_data=user_data_script)
 
             network_interfaces = self.ec2_client.network_interfaces.filter(
@@ -102,7 +104,7 @@ class BackendGateway():
             self.elastic_ip.create()
 
 
-    def __call__(self):
+    def __call__(self, frontend_outway_keys, frontend_outway_vpn_address):
         print('__BACKEND GATEWAY__')
 
         print('Cleaning previous env...')
@@ -112,7 +114,7 @@ class BackendGateway():
         self._handle_security_group()
 
         print('Creating ec2 instance...')
-        self._handle_ec2_instances()
+        self._handle_ec2_instances(frontend_outway_keys, frontend_outway_vpn_address)
 
         print('Waiting for instances to be available...')
         running_waiter = self.aws_client.get_waiter('instance_running')

@@ -1,5 +1,6 @@
 from utilities.aws import init_aws_client
 from utilities.groups.frontend import Frontend
+from utilities.groups.frontend_outway import FrontendOutway
 from utilities.groups.backend import Backend
 from utilities.groups.database import Database
 from utilities.groups.backend_gateway import BackendGateway
@@ -33,6 +34,43 @@ def handle_backend_infraestructrue():
     # database()
     # application(database.PRIVATE_IP_ADDRESS)
 
+
+def main():
+    # Frontend Clients
+    nv_aws_client  = init_aws_client('ec2', 'us-east-1')
+    nv_ec2_client  = boto3.resource('ec2', region_name='us-east-1')
+    nv_elb_client  = init_aws_client('elbv2', 'us-east-1')
+    nv_as_client   = init_aws_client('autoscaling', 'us-east-1')
+
+    # Backend Clients
+    ohio_aws_client = init_aws_client('ec2', 'us-east-2')
+    ohio_ec2_client = boto3.resource('ec2', region_name='us-east-2')
+    
+    # Backend VPC
+    vpc = BackendVPC(ohio_aws_client, ohio_ec2_client)
+    vpc_id, private_subnet, public_subnet = vpc()
+
+    # Frontend Outway
+    frontend_outway = FrontendOutway(nv_aws_client, nv_ec2_client)
+
+    # Backend Gateway
+    backend_gateway = BackendGateway(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
+    backend_gateway(frontend_outway.keys, frontend_outway.VPN_ADDRESS)
+
+    # Creating Frontend Outway
+    frontend_outway(backend_gateway.keys, backend_gateway.ec2.ip)
+
+    # # Database
+    # database = Database(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
+    # database()
+
+    # # Application
+    # application = Backend(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
+    # application(database.PRIVATE_IP_ADDRESS)
+
+    # Frontend Application
+    frontend = Frontend(nv_aws_client, nv_ec2_client, nv_elb_client, nv_as_client, ohio_aws_client)
+    frontend(frontend_outway.ec2.ip)
 
 
 

@@ -9,6 +9,7 @@ class EC2():
         self.subnet_id = subnet_id
         self.private_ip_address = private_ip_address
         self.id = None
+        self.ip = None
 
 
     def create(self, sg_id, image_id, user_data=''):
@@ -78,6 +79,7 @@ class EC2():
 
         if len(instances) > 0:
             self.id = instances[0].id
+            self.ip = instances[0].public_ip_address
 
     def delete_by_group(self):
         filters = [{ 

@@ -19,6 +19,7 @@ class FrontendOutway():
             os.path.dirname(__file__), 
             '../../scripts/aws/frontend_outway/user_data.sh'
         )
+        self.VPN_ADDRESS = '14.6.0.2'
         self._prepare_resources()
         self.keys()
 
@@ -48,7 +49,7 @@ class FrontendOutway():
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=80, ToPort=80)
         security_group.authorize_ingress(IpProtocol="udp", CidrIp="0.0.0.0/0", FromPort=51820, ToPort=51820)
 
-    def _handle_ec2_instances(self):
+    def _handle_ec2_instances(self, gateway_keys, gateway_ip):
         image_id = get_frontend_outway_image_id()
 
         user_data_script = None
@@ -56,5 +57,26 @@ class FrontendOutway():
             user_data_script = '\n'.join(script_file)
 
         if user_data_script is not None:
-            user_data_script = user_data_script.replace('$SERVER_PRIVATE_KEY', self.keys.private_key)
+            user_data_script = user_data_script.replace('$CLIENT_PRIVATE_KEY', self.keys.private_key)
+            user_data_script = user_data_script.replace('$CLIENT_VPN_ADDRESS', self.VPN_ADDRESS)
+            user_data_script = user_data_script.replace('$SERVER_PUBLIC_KEY', gateway_keys.public_key)
+            user_data_script = user_data_script.replace('$BACKEND_GATEWAY_IP', gateway_ip)
             self.ec2.create(self.security_group.id, image_id, user_data=user_data_script)
+
+    def __call__(self, gateway_keys, gateway_ip):
+        print('__FRONTEN OUTWAY__')
+
+        print('Cleaning previous env...')
+        self._destroy_previous_env()
+
+        print('Creating new security group...')
+        self._handle_security_group()
+
+        print('Creating ec2 instance...')
+        self._handle_ec2_instances(gateway_keys, gateway_ip)
+
+        print('Waiting for instances to be available...')
+        running_waiter = self.aws_client.get_waiter('instance_running')
+        running_waiter.wait(InstanceIds=[self.ec2.id])
+
+        print('Done :) \n')

@@ -112,7 +112,7 @@ class Frontend():
         self.listener.create(default_actions, 80, 'HTTP')
 
 
-    def _handle_frontend_launch_configuration(self):
+    def _handle_frontend_launch_configuration(self, frontend_outway_ip):
         image_id = get_frontend_image_id()
 
         user_data_script = None
@@ -120,7 +120,7 @@ class Frontend():
             user_data_script = '\n'.join(script_file)
 
         if user_data_script is not None:
-            user_data_script = user_data_script.replace('$FRONTEND_OUTWAY_IP', 'x')
+            user_data_script = user_data_script.replace('$FRONTEND_OUTWAY_IP', frontend_outway_ip)
             print(user_data_script)
         self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data=user_data_script, instance_type='t2.small')
 
@@ -130,7 +130,7 @@ class Frontend():
         self.auto_scaling_group.create(self.launch_configuration.name, [self.target_group.arn], 2, subnets)
 
 
-    def __call__(self):
+    def __call__(self, frontend_outway_ip):
         print('Init Fronend Deploy')
 
         print('Destroing Env...')
@@ -143,7 +143,7 @@ class Frontend():
         self._handle_frontend_load_balancer()
 
         print('Creating Launch config...')
-        self._handle_frontend_launch_configuration()
+        self._handle_frontend_launch_configuration(frontend_outway_ip)
 
         print('Waiting for load balancer availability...')
         load_balancer_availability_waiter = self.elb_client.get_waiter('load_balancer_available')
