@@ -4,7 +4,7 @@ http://:80 {
         reverse_proxy frontend-outway-ip
     }
 
-    @frontend path / /*
+    @frontend path /*
     route @frontend {
         reverse_proxy http://localhost:8080
     }

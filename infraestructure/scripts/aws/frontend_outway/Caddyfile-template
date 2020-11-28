@@ -1,5 +1,5 @@
 http://:80 {
-    @backend_gateway path / /*
+    @backend_gateway path /*
     route @backend_gateway {
         reverse_proxy http://14.6.0.1
     }
