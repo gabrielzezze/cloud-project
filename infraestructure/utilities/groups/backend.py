@@ -40,14 +40,6 @@ class Backend():
         security_group_name = get_backend_security_group_name()
         self.security_group = SecurityGroup(self.aws_client, self.ec2_client, security_group_name, self.vpc.id)
 
-        # Elastic IP
-        # elastic_ip_name = get_backend_elastic_ip_name()
-        # self.elastic_ip = ElasticIP(self.aws_client, elastic_ip_name)
-
-        # Database Elastic IP
-        # database_elastic_ip_name = get_database_elastic_ip_name()
-        # self.database_elastic_ip = ElasticIP(self.aws_client, database_elastic_ip_name)
-
         # Gateway Elastic IP
         gateway_elastic_ip_name = get_backend_vpn_gateway_elastic_ip_name()
         self.gateway_elastic_ip = ElasticIP(self.aws_client, gateway_elastic_ip_name)

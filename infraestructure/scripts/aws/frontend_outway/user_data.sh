@@ -11,6 +11,12 @@ sudo apt update
 sudo apt upgrade -y
 sudo apt install wireguard -y
 
+# Enable forwarding
+echo 'net.ipv4.ip_forward=1' | sudo tee -a /etc/sysctl.conf
+sudo echo 1 > /proc/sys/net/ipv4/ip_forward
+sudo sysctl -p
+sudo echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
+
 # Get template files
 git clone https://github.com/gabrielzezze/cloud-project.git
 
@@ -23,3 +29,11 @@ sudo cp ./client.conf /etc/wireguard/client.conf
 # Start Wireguard
 sudo systemctl enable wg-quick@client
 sudo wg-quick up client
+
+# Instal caddy
+echo "deb [trusted=yes] https://apt.fury.io/caddy/ /" | sudo tee -a /etc/apt/sources.list.d/caddy-fury.list
+sudo apt update
+sudo apt install caddy -y
+
+cp ./cloud-project/infraestructure/scripts/aws/frontend_outway/Caddyfile-template ./Caddyfile
+sudo caddy run
