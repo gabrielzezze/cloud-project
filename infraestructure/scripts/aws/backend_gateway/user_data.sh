@@ -25,11 +25,3 @@ sudo cp ./gateway.conf /etc/wireguard/gateway.conf
 
 sudo systemctl enable wg-quick@gateway
 sudo wg-quick up gateway
-
-
-
-iptables -t nat -A PREROUTING -p tcp --dport 3000 -j DNAT --to-destination 14.0.0.2:80
-iptables -t nat -A POSTROUTING -p tcp -d 14.0.0.2 --dport 80 -j SNAT --to-source 14.0.0.1
-
-iptables -t nat -D PREROUTING -p tcp --dport 3000 -j DNAT --to-destination 14.0.0.2:80
-iptables -t nat -D POSTROUTING -p tcp -d 14.0.0.2 --dport 80 -j SNAT --to-source 14.0.0.1

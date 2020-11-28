@@ -75,3 +75,19 @@ def get_backend_vpn_gateway_security_group_name():
 BACKEND_VPN_GATEWAY_IMAGE_ID = DEFAULT_UBUNTU_IMAGE_ID
 def get_backend_vpn_gateway_image_id():
     return BACKEND_VPN_GATEWAY_IMAGE_ID
+
+
+#Frontend Outway
+FRONTEND_OUTWAY_NAME = 'zezze-frontend-outway'
+def get_frontend_outway_name():
+    return FRONTEND_OUTWAY_NAME
+
+FRONTEND_OUTWAY_SECURITY_GROUP_NAME = 'zezze-frontend-outway-security-group'
+def get_frontend_outway_security_group_name():
+    return FRONTEND_OUTWAY_SECURITY_GROUP_NAME
+
+FRONTEND_OUTWAY_IMAGE_ID = 'ami-0885b1f6bd170450c'
+def get_frontend_outway_image_id():
+    return FRONTEND_OUTWAY_IMAGE_ID
+
+
