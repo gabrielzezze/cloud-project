@@ -36,6 +36,8 @@ def handle_backend_infraestructrue():
 
 
 def main():
+    print('INIT INFRAESTRUCTURE')
+    print('################################### \n')
     # Frontend Clients
     nv_aws_client  = init_aws_client('ec2', 'us-east-1')
     nv_ec2_client  = boto3.resource('ec2', region_name='us-east-1')
@@ -58,33 +60,35 @@ def main():
     backend_gateway(frontend_outway.keys, frontend_outway.VPN_ADDRESS)
 
     # Creating Frontend Outway
-    frontend_outway(backend_gateway.keys, backend_gateway.ec2.ip)
+    frontend_outway(backend_gateway.keys, backend_gateway.elastic_ip.ip)
 
-    # # Database
-    # database = Database(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
-    # database()
+    # Database
+    database = Database(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
+    database()
 
-    # # Application
-    # application = Backend(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
-    # application(database.PRIVATE_IP_ADDRESS)
+    # Application
+    application = Backend(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
+    application(database.PRIVATE_IP_ADDRESS)
 
     # Frontend Application
     frontend = Frontend(nv_aws_client, nv_ec2_client, nv_elb_client, nv_as_client, ohio_aws_client)
+    print(frontend_outway.ec2.ip)
     frontend(frontend_outway.ec2.ip)
 
 
 
 if __name__ == '__main__':
-    args = sys.argv
+    main()
+    # args = sys.argv
 
-    if '--frontend' in args:
-        handle_frontend_infraestructure()
+    # if '--frontend' in args:
+    #     handle_frontend_infraestructure()
     
-    if '--backend' in args:
-        handle_backend_infraestructrue()
+    # if '--backend' in args:
+    #     handle_backend_infraestructrue()
 
-    if '--frontend' not in args and '--backend' not in args:
-        run_all = str(input('Want to create entire infraestructure?(y/N)'))
-        if run_all == 'y' or run_all == 'y':
-            handle_frontend_infraestructure()
-            handle_backend_infraestructrue()
+    # if '--frontend' not in args and '--backend' not in args:
+    #     run_all = str(input('Want to create entire infraestructure?(y/N)'))
+    #     if run_all == 'y' or run_all == 'y':
+    #         handle_frontend_infraestructure()
+    #         handle_backend_infraestructrue()

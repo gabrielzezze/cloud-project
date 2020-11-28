@@ -90,4 +90,8 @@ FRONTEND_OUTWAY_IMAGE_ID = 'ami-0885b1f6bd170450c'
 def get_frontend_outway_image_id():
     return FRONTEND_OUTWAY_IMAGE_ID
 
+FRONTEND_OUTWAY_ELASTIC_IP_NAME = 'zezze-frontend-outway-elastic-ip'
+def get_frontend_outway_elastic_ip_name():
+    return FRONTEND_OUTWAY_ELASTIC_IP_NAME
+
 

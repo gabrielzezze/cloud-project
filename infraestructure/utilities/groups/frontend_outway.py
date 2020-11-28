@@ -6,7 +6,8 @@ from utilities.vpn.keys import Keys
 from constants.aws import (
     get_frontend_outway_name,
     get_frontend_outway_security_group_name,
-    get_frontend_outway_image_id
+    get_frontend_outway_image_id,
+    get_frontend_outway_elastic_ip_name
 )
 
 class FrontendOutway():
@@ -29,11 +30,15 @@ class FrontendOutway():
         sg_name = get_frontend_outway_security_group_name()
         self.security_group = SecurityGroup(self.ec2_client, self.ec2_resource, sg_name)
 
+        # Elastic IP
+        elastic_ip_name = get_frontend_outway_elastic_ip_name()
+        self.elastic_ip = ElasticIP(self.ec2_client, elastic_ip_name)
+
         # VPN Keys
         self.keys = Keys()
 
     def _destroy_previous_env(self):
-        termination_waiter = self.aws_client.get_waiter('instance_terminated')
+        termination_waiter = self.ec2_client.get_waiter('instance_terminated')
 
         # Delete EC2 instances
         deleted_instances_ids = self.ec2.delete_by_group()
@@ -63,6 +68,23 @@ class FrontendOutway():
             user_data_script = user_data_script.replace('$BACKEND_GATEWAY_IP', gateway_ip)
             self.ec2.create(self.security_group.id, image_id, user_data=user_data_script)
 
+    def _handle_elastic_ip_association(self):
+        instance_id = self.ec2.id
+
+        if instance_id is not None:
+            self.ec2_client.associate_address(
+                InstanceId   = instance_id,
+                AllocationId = self.elastic_ip.allocation_id
+            )
+    
+    def _handle_elastic_ip_creation(self):
+        self.elastic_ip.get_ip()
+
+        if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
+            self.elastic_ip.create()
+
+
+
     def __call__(self, gateway_keys, gateway_ip):
         print('__FRONTEN OUTWAY__')
 
@@ -76,7 +98,12 @@ class FrontendOutway():
         self._handle_ec2_instances(gateway_keys, gateway_ip)
 
         print('Waiting for instances to be available...')
-        running_waiter = self.aws_client.get_waiter('instance_running')
+        running_waiter = self.ec2_client.get_waiter('instance_running')
         running_waiter.wait(InstanceIds=[self.ec2.id])
+
+        print('Creating Elastic IP if needed...')
+        self._handle_elastic_ip_creation()
+        print('Allocating Elastic IP...')
+        self._handle_elastic_ip_association()
 
         print('Done :) \n')

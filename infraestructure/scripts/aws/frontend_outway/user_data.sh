@@ -18,7 +18,7 @@ git clone https://github.com/gabrielzezze/cloud-project.git
 cp ./cloud-project/infraestructure/scripts/vpn/client_template.conf ./client-template.conf
 touch ./client.conf
 sed -e "s~$(echo 'private_key')~${client_private_key}~g" -e "s~$(echo 'server_public_key')~${server_public_key}~g" -e "s~$(echo 'server_public_ip')~${backend_gateway_ip}~g" -e "s~$(echo 'vpn_address')~${client_vpn_address}~g" ./client-template.conf > ./client.conf
-sudo cp ./gateway.conf /etc/wireguard/client.conf
+sudo cp ./client.conf /etc/wireguard/client.conf
 
 # Start Wireguard
 sudo systemctl enable wg-quick@client
