@@ -8,7 +8,7 @@ cd /home/ubuntu
 # Clone repo
 git clone https://github.com/gabrielzezze/cloud-project.git
 
-# Run application
+# Build application
 chmod +x ./cloud-project/infraestructure/scripts/aws/frontend/init.sh
 ./cloud-project/infraestructure/scripts/aws/frontend/init.sh
 
@@ -22,5 +22,9 @@ touch ./Caddyfile
 sed -e "s~$(echo 'frontend-outway-ip')~${frontend_outway_ip}~g" Caddyfile-template > ./Caddyfile
 sudo caddy start
 
+# Run application
 cd ./applications/frontend
-sudo yarn serve-prod
+sudo yarn serve-prod &
+
+sudo caddy stop
+sudo caddy start

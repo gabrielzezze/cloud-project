@@ -92,7 +92,8 @@ class Frontend():
     def _handle_frontend_security_group(self):
         security_group = self.security_group.create('Frontend Security Group')
         security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=22, ToPort=22)
-        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=80, ToPort=80) 
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=80, ToPort=80)
+        security_group.authorize_ingress(IpProtocol="tcp", CidrIp="0.0.0.0/0", FromPort=443, ToPort=443)
 
 
     def _handle_frontend_load_balancer(self):

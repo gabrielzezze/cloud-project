@@ -56,11 +56,11 @@ def main():
     frontend_outway = FrontendOutway(nv_aws_client, nv_ec2_client)
 
     # Backend Gateway
-    backend_gateway = BackendGateway(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
-    backend_gateway(frontend_outway.keys, frontend_outway.VPN_ADDRESS)
+    # backend_gateway = BackendGateway(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
+    # backend_gateway(frontend_outway.keys, frontend_outway.VPN_ADDRESS)
 
-    # Creating Frontend Outway
-    frontend_outway(backend_gateway.keys, f'{backend_gateway.elastic_ip.ip}:51820')
+    # # Creating Frontend Outway
+    # frontend_outway(backend_gateway.keys, f'{backend_gateway.elastic_ip.ip}:51820')
 
     # # Database
     # database = Database(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
