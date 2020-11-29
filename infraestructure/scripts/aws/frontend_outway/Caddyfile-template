@@ -3,9 +3,4 @@ http://:80 {
     route @backend_gateway {
         reverse_proxy http://14.6.0.1
     }
-
-    @index path *
-    route @index {
-        reverse_proxy http://14.6.0.1
-    }
 }

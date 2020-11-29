@@ -121,7 +121,6 @@ class Frontend():
 
         if user_data_script is not None:
             user_data_script = user_data_script.replace('$FRONTEND_OUTWAY_IP', frontend_outway_ip)
-            print(user_data_script)
         self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data=user_data_script, instance_type='t2.small')
 
 

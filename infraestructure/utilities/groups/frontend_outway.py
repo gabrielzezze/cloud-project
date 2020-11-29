@@ -68,6 +68,13 @@ class FrontendOutway():
             user_data_script = user_data_script.replace('$BACKEND_GATEWAY_IP', gateway_ip)
             self.ec2.create(self.security_group.id, image_id, user_data=user_data_script)
 
+            network_interfaces = self.ec2_resource.network_interfaces.filter(
+                Filters=[{ 'Name': 'group-id', 'Values': [self.security_group.id] }]
+            )
+            network_interfaces = list(network_interfaces)
+            if len(network_interfaces) > 0:
+                network_interfaces[0].modify_attribute(SourceDestCheck={ 'Value': False })
+
     def _handle_elastic_ip_association(self):
         instance_id = self.ec2.id
 

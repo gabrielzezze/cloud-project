@@ -71,6 +71,7 @@ def main():
     # application(database.PRIVATE_IP_ADDRESS)
 
     # Frontend Application
+    frontend_outway.elastic_ip.get_ip()
     frontend = Frontend(nv_aws_client, nv_ec2_client, nv_elb_client, nv_as_client, ohio_aws_client)
     frontend(frontend_outway.elastic_ip.ip)
 
