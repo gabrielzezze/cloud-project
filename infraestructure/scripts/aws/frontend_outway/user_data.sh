@@ -35,5 +35,5 @@ echo "deb [trusted=yes] https://apt.fury.io/caddy/ /" | sudo tee -a /etc/apt/sou
 sudo apt update
 sudo apt install caddy -y
 
-cp ./cloud-project/infraestructure/scripts/aws/frontend_outway/Caddyfile-template ./Caddyfile
-sudo caddy run
+cp ./cloud-project/infraestructure/scripts/aws/frontend_outway/Caddyfile-template /home/ubuntu/Caddyfile
+# sudo caddy run
