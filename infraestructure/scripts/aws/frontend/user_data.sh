@@ -21,3 +21,6 @@ cp ./cloud-project/infraestructure/scripts/aws/frontend/Caddyfile-template ./Cad
 touch ./Caddyfile
 sed -e "s~$(echo 'frontend-outway-ip')~${frontend_outway_ip}~g" Caddyfile-template > ./Caddyfile
 sudo caddy start
+
+cd ./applications/frontend
+sudo yarn serve-prod

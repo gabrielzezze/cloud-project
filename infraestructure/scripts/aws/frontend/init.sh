@@ -11,4 +11,3 @@ cd ./applications/frontend
 git checkout vpn-version
 yarn install
 sudo yarn run build
-sudo yarn run serve-prod &
