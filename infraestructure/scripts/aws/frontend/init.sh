@@ -10,4 +10,5 @@ git clone https://github.com/gabrielzezze/cloud-project-applications.git ./appli
 cd ./applications/frontend
 git checkout vpn-version
 yarn install
-sudo yarn run deploy-prod
+sudo yarn run build
+sudo yarn run serve-prod &

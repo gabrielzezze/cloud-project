@@ -93,7 +93,7 @@ class FrontendOutway():
 
 
     def __call__(self, gateway_keys, gateway_ip):
-        print('__FRONTEN OUTWAY__')
+        print('__FRONTEND OUTWAY__')
 
         print('Cleaning previous env...')
         self._destroy_previous_env()

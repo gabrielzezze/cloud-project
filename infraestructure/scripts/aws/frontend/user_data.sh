@@ -10,7 +10,7 @@ git clone https://github.com/gabrielzezze/cloud-project.git
 
 # Run application
 chmod +x ./cloud-project/infraestructure/scripts/aws/frontend/init.sh
-./cloud-project/infraestructure/scripts/aws/frontend/init.sh &
+./cloud-project/infraestructure/scripts/aws/frontend/init.sh
 
 # Instal caddy
 echo "deb [trusted=yes] https://apt.fury.io/caddy/ /" | sudo tee -a /etc/apt/sources.list.d/caddy-fury.list
