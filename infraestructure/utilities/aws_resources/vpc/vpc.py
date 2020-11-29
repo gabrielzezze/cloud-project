@@ -44,9 +44,13 @@ class VPC():
         except Exception as e:
             print('[ Error ] Creating VPC...', e)
     
-    def create_subnets(self, ec2_client):
-        self.public_subnet.create(self.vpc.id)
-        self.public_subnet.set_auto_assign_ipv4_ips(ec2_client, True)
+    def create_subnets(self, ec2_client, availability_zone=None):
+        if availability_zone is not None:
+            self.public_subnet.create(self.vpc.id, availability_zone)
+            self.public_subnet.set_auto_assign_ipv4_ips(ec2_client, True)
+        else:
+            self.public_subnet.create(self.vpc.id)
+            self.public_subnet.set_auto_assign_ipv4_ips(ec2_client, True)
 
         self.private_subnet.create(self.vpc.id)
 
@@ -77,7 +81,7 @@ class VPC():
         self.vpc.attach_internet_gateway(
             InternetGatewayId=self.internet_gateway.id
         )
-
+    
     def get(self, ec2_client):
         try:
             res = ec2_client.describe_vpcs(

@@ -1,7 +1,7 @@
 http://:80 {
     @api path /api/*
     route @api {
-        reverse_proxy http://frontend-outway-ip
+        reverse_proxy http://14.0.1.40
     }
 
 

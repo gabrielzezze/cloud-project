@@ -11,10 +11,14 @@ from constants.aws import (
 )
 
 class FrontendOutway():
-    def __init__(self, ec2_client, ec2_resource):
+    def __init__(self, ec2_client, ec2_resource, vpc, public_subnet, private_subnet):
         self.ec2_client = ec2_client
         self.ec2_resource = ec2_resource
         self.name = get_frontend_outway_name()
+
+        self.vpc = vpc
+        self.private_subnet = private_subnet
+        self.public_subnet = public_subnet
 
         self.USER_DATA_SCRIPT_PATH = os.path.join(
             os.path.dirname(__file__), 
@@ -25,10 +29,10 @@ class FrontendOutway():
         self.keys()
 
     def _prepare_resources(self):
-        self.ec2 = EC2(self.ec2_resource, self.name, 'frontend-gateway')
+        self.ec2 = EC2(self.ec2_resource, self.name, 'frontend-gateway', subnet_id=self.public_subnet.id)
 
         sg_name = get_frontend_outway_security_group_name()
-        self.security_group = SecurityGroup(self.ec2_client, self.ec2_resource, sg_name)
+        self.security_group = SecurityGroup(self.ec2_client, self.ec2_resource, sg_name, self.vpc.id)
 
         # Elastic IP
         elastic_ip_name = get_frontend_outway_elastic_ip_name()
@@ -46,7 +50,10 @@ class FrontendOutway():
             termination_waiter.wait(InstanceIds=deleted_instances_ids)
 
         # Delete security group
-        self.security_group.delete()
+        sgs = self.vpc.security_groups.filter(Filters=[{ "Name": "group-name", 'Values': [self.security_group.name] }])
+        sgs = list(sgs.all())
+        if len(sgs) > 0:
+            self.security_group.delete(sg_id=sgs[0].id)
 
     def _handle_security_group(self):
         security_group = self.security_group.create('Frontend Outway Security Group')
@@ -73,6 +80,7 @@ class FrontendOutway():
             )
             network_interfaces = list(network_interfaces)
             if len(network_interfaces) > 0:
+                self.network_interface_id = network_interfaces[0].id
                 network_interfaces[0].modify_attribute(SourceDestCheck={ 'Value': False })
 
     def _handle_elastic_ip_association(self):

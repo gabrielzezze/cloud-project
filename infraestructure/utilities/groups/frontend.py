@@ -5,6 +5,7 @@ from utilities.aws_resources.security_group import SecurityGroup
 from utilities.aws_resources.launch_configuration import LaunchConfiguration
 from utilities.aws_resources.auto_scaling_group import AutoScalingGroup
 from utilities.aws_resources.elastic_ip import ElasticIP
+from utilities.aws_resources.vpc.subnet import Subnet
 from constants.aws import (
     get_frontend_load_balancer_name, 
     get_frontend_lb_target_group_name, 
@@ -18,12 +19,16 @@ import os
 import time
 
 class Frontend():
-    def __init__(self, aws_client, ec2_client, elb_client, as_client, ohio_aws_client):
+    def __init__(self, aws_client, ec2_client, elb_client, as_client, ohio_aws_client, vpc, public_subnet, private_subnet):
         self.aws_client = aws_client
         self.ec2_client = ec2_client
         self.elb_client = elb_client
         self.as_client  = as_client
         self.ohio_aws_client = ohio_aws_client
+
+        self.vpc = vpc
+        self.public_subnet = public_subnet
+        self.private_subnet = private_subnet
 
         self.USER_DATA_SCRIPT_PATH = os.path.join(
             os.path.dirname(__file__), 
@@ -38,7 +43,7 @@ class Frontend():
         self.auto_scaling_group = AutoScalingGroup(self.as_client, as_group_name, 'frontend')
 
         sg_group_name = get_frontend_security_group_name()
-        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, sg_group_name)
+        self.security_group = SecurityGroup(self.aws_client, self.ec2_client, sg_group_name, self.vpc.id)
 
         lb_name = get_frontend_load_balancer_name()
         self.load_balancer = LoadBalancer(self.elb_client, lb_name)
@@ -85,7 +90,10 @@ class Frontend():
                 ])
 
         # Delete security group
-        self.security_group.delete()
+        sgs = self.vpc.security_groups.filter(Filters=[{ "Name": "group-name", 'Values': [self.security_group.name] }])
+        sgs = list(sgs.all())
+        if len(sgs) > 0:
+            self.security_group.delete(sg_id=sgs[0].id)
             
 
 
@@ -99,11 +107,33 @@ class Frontend():
     def _handle_frontend_load_balancer(self):
         running_waiter = self.aws_client.get_waiter('instance_running')
 
-        subnets = [subnet.id for subnet in list(self.ec2_client.subnets.all())]
+        self.second_public_subnet = Subnet(self.ec2_client, 'zezze-frontend-vpc-second-public-subnet', '14.10.2.0/24')
+        self.second_public_subnet.get(self.aws_client)
+        if self.second_public_subnet.id is None:
+            self.second_public_subnet.create(self.vpc.id, 'us-east-1b')
+        
+        res = self.aws_client.describe_route_tables(
+            Filters=[
+                {
+                    'Name': 'association.subnet-id',
+                    'Values': [
+                        self.public_subnet.id
+                    ]
+                }
+            ]
+        )
+        route_table_id = res.get('RouteTables', [{}])[0].get('RouteTableId', None)
+        if route_table_id:
+            frontend_public_route_table = self.ec2_client.RouteTable(route_table_id)
+            frontend_public_route_table.associate_with_subnet(
+                    SubnetId=self.second_public_subnet.id
+                )
+
+        subnets = [self.public_subnet.id, self.second_public_subnet.id]
         self.load_balancer.create(subnets, self.security_group.id)
 
-        vpc_id = list(self.ec2_client.vpcs.all())[0].id
-        self.target_group.create('HTTP', 80, vpc_id)
+        
+        self.target_group.create('HTTP', 80, self.vpc.id)
 
         default_actions = [{
                 'TargetGroupArn': self.target_group.arn,
@@ -126,7 +156,7 @@ class Frontend():
 
 
     def _handle_frontend_auto_scaling_group(self):
-        subnets = ','.join([subnet.id for subnet in list(self.ec2_client.subnets.all())])
+        subnets = f'{self.public_subnet.id},{self.second_public_subnet.id}'
         self.auto_scaling_group.create(self.launch_configuration.name, [self.target_group.arn], 2, subnets)
 
 

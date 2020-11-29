@@ -1,7 +1,4 @@
 #!/bin/bash
-# Vars to be replaced by code
-frontend_outway_ip=$FRONTEND_OUTWAY_IP
-
 sudo apt update
 sudo apt upgrade -y
 cd /home/ubuntu
@@ -12,19 +9,31 @@ git clone https://github.com/gabrielzezze/cloud-project.git
 chmod +x ./cloud-project/infraestructure/scripts/aws/frontend/init.sh
 ./cloud-project/infraestructure/scripts/aws/frontend/init.sh
 
-# Instal caddy
-echo "deb [trusted=yes] https://apt.fury.io/caddy/ /" | sudo tee -a /etc/apt/sources.list.d/caddy-fury.list
+# Config Caddy
+cp ./cloud-project/infraestructure/scripts/aws/frontend/Caddyfile-template ./Caddyfile
+
+# Install docker
+sudo apt remove docker docker-engine docker.io containerd runc -y
+sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt update
-sudo apt install caddy -y
+sudo apt install docker-ce docker-ce-cli containerd.io -y
 
-cp ./cloud-project/infraestructure/scripts/aws/frontend/Caddyfile-template ./Caddyfile-template
-touch ./Caddyfile
-sed -e "s~$(echo 'frontend-outway-ip')~${frontend_outway_ip}~g" Caddyfile-template > ./Caddyfile
-sudo caddy start
+# Pull caddy image
+sudo docker pull caddy
 
-# Run application
-cd ./applications/frontend
-sudo yarn serve-prod &
+# Run application serving container.
+sudo docker run -d -p 8080:80 \
+    -v /home/ubuntu/applications/frontend/build/:/usr/share/caddy/ \
+    -v caddy_data:/data \
+    --name frontend-serving \
+    caddy
 
-sudo caddy stop
-sudo caddy start
+# Create and run the reverse proxy container.
+sudo docker run -d -p 80:80 \
+-v /home/ubuntu/Caddyfile:/etc/caddy/Caddyfile \
+-v /home/ubuntu/caddy_data:/data \
+--name=frontend-caddy-reverse-proxy \
+--network=host \
+caddy

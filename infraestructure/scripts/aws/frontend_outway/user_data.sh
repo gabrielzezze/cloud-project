@@ -29,11 +29,3 @@ sudo cp ./client.conf /etc/wireguard/client.conf
 # Start Wireguard
 sudo systemctl enable wg-quick@client
 sudo wg-quick up client
-
-# Instal caddy
-echo "deb [trusted=yes] https://apt.fury.io/caddy/ /" | sudo tee -a /etc/apt/sources.list.d/caddy-fury.list
-sudo apt update
-sudo apt install caddy -y
-
-cp ./cloud-project/infraestructure/scripts/aws/frontend_outway/Caddyfile-template ./Caddyfile
-sudo caddy start

@@ -32,7 +32,7 @@ class RouteTable():
             except Exception as e:
                 print('[ Error ] Associating subnet to route table...', e)
 
-    def create_route(self, cidr_block, gateway_id=None, nat_gateway_id=None):
+    def create_route(self, cidr_block, gateway_id=None, nat_gateway_id=None, network_interface_id=None):
         if self.route_table is not None:
             try:
                 if gateway_id:
@@ -44,6 +44,11 @@ class RouteTable():
                     route = self.route_table.create_route(
                         DestinationCidrBlock=cidr_block, 
                         NatGatewayId=nat_gateway_id,
+                    )
+                elif network_interface_id:
+                    route = self.route_table.create_route(
+                        DestinationCidrBlock=cidr_block, 
+                        NetworkInterfaceId=network_interface_id
                     )
 
             except Exception as e:
