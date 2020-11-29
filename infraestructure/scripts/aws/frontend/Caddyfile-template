@@ -4,13 +4,12 @@ http://:80 {
         reverse_proxy http://frontend-outway-ip
     }
 
-    @index path *
-    route @index {
-        rewrite http://localhost:8080/index.html
-    }
 
-    @frontend path /*
+    @frontend path / /*
     route @frontend {
         reverse_proxy http://localhost:8080
     }
 }
+
+
+
