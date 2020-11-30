@@ -107,32 +107,9 @@ class Frontend():
     def _handle_frontend_load_balancer(self):
         running_waiter = self.aws_client.get_waiter('instance_running')
 
-        self.second_public_subnet = Subnet(self.ec2_client, 'zezze-frontend-vpc-second-public-subnet', '14.10.2.0/24')
-        self.second_public_subnet.get(self.aws_client)
-        if self.second_public_subnet.id is None:
-            self.second_public_subnet.create(self.vpc.id, 'us-east-1b')
-        
-        res = self.aws_client.describe_route_tables(
-            Filters=[
-                {
-                    'Name': 'association.subnet-id',
-                    'Values': [
-                        self.public_subnet.id
-                    ]
-                }
-            ]
-        )
-        route_table_id = res.get('RouteTables', [{}])[0].get('RouteTableId', None)
-        if route_table_id:
-            frontend_public_route_table = self.ec2_client.RouteTable(route_table_id)
-            frontend_public_route_table.associate_with_subnet(
-                    SubnetId=self.second_public_subnet.id
-                )
-
         subnets = [self.public_subnet.id, self.second_public_subnet.id]
         self.load_balancer.create(subnets, self.security_group.id)
 
-        
         self.target_group.create('HTTP', 80, self.vpc.id)
 
         default_actions = [{
@@ -143,7 +120,7 @@ class Frontend():
         self.listener.create(default_actions, 80, 'HTTP')
 
 
-    def _handle_frontend_launch_configuration(self, frontend_outway_ip):
+    def _handle_frontend_launch_configuration(self):
         image_id = get_frontend_image_id()
 
         user_data_script = None
@@ -151,8 +128,7 @@ class Frontend():
             user_data_script = '\n'.join(script_file)
 
         if user_data_script is not None:
-            user_data_script = user_data_script.replace('$FRONTEND_OUTWAY_IP', frontend_outway_ip)
-        self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data=user_data_script, instance_type='t2.small')
+            self.launch_configuration.create(image_id, 'zezze_key', [self.security_group.id], user_data=user_data_script, instance_type='t2.small')
 
 
     def _handle_frontend_auto_scaling_group(self):
@@ -160,7 +136,7 @@ class Frontend():
         self.auto_scaling_group.create(self.launch_configuration.name, [self.target_group.arn], 2, subnets)
 
 
-    def __call__(self, frontend_outway_ip):
+    def __call__(self):
         print('Init Fronend Deploy')
 
         print('Destroing Env...')
@@ -173,7 +149,7 @@ class Frontend():
         self._handle_frontend_load_balancer()
 
         print('Creating Launch config...')
-        self._handle_frontend_launch_configuration(frontend_outway_ip)
+        self._handle_frontend_launch_configuration()
 
         print('Waiting for load balancer availability...')
         load_balancer_availability_waiter = self.elb_client.get_waiter('load_balancer_available')

@@ -41,24 +41,8 @@ def main():
     frontend_outway(backend_gateway.keys, f'{backend_gateway.elastic_ip.ip}:51820')
 
     # # Create fronend vpc route table
-    res = nv_aws_client.describe_route_tables(
-        Filters=[
-            {
-                'Name': 'association.subnet-id',
-                'Values': [
-                    frontend_public_subnet.id
-                ]
-            }
-        ]
-    )
-    route_table_id = res.get('RouteTables', [{}])[0].get('RouteTableId', None)
-    if route_table_id:
-        frontend_public_route_table = nv_ec2_client.RouteTable(route_table_id)
-        frontend_public_route_table.create_route(
-            DestinationCidrBlock='14.0.0.0/16', 
-            NetworkInterfaceId=frontend_outway.network_interface_id
-        )
-
+    frontend_vpc.handle_public_route_table(frontend_outway.network_interface_id)
+    frontend_vpc.handle_second_public_subnet()
     # Database
     database = Database(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
     database()
@@ -67,26 +51,14 @@ def main():
     application = Backend(ohio_aws_client, ohio_ec2_client, vpc_id, private_subnet, public_subnet)
     application(database.PRIVATE_IP_ADDRESS)
 
-
     # Frontend Application
     frontend_outway.elastic_ip.get_ip()
     frontend = Frontend(nv_aws_client, nv_ec2_client, nv_elb_client, nv_as_client, ohio_aws_client, frontend_vpc_obj, frontend_public_subnet, frontend_private_subnet)
+    frontend.second_public_subnet = frontend_vpc.second_public_subnet
     frontend(frontend_outway.elastic_ip.ip)
 
 
 
 if __name__ == '__main__':
     main()
-    # args = sys.argv
 
-    # if '--frontend' in args:
-    #     handle_frontend_infraestructure()
-    
-    # if '--backend' in args:
-    #     handle_backend_infraestructrue()
-
-    # if '--frontend' not in args and '--backend' not in args:
-    #     run_all = str(input('Want to create entire infraestructure?(y/N)'))
-    #     if run_all == 'y' or run_all == 'y':
-    #         handle_frontend_infraestructure()
-    #         handle_backend_infraestructrue()
