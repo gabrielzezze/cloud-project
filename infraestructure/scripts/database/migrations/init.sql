@@ -11,4 +11,12 @@ CREATE TABLE Tasks(
     updatedAt DATETIME
 );
 
-
+DROP TABLE IF EXISTS Users;
+CREATE TABLE Users(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    createdAt DATETIME NOT NULL,
+    updatedAt DATETIME NOT NULL
+);
