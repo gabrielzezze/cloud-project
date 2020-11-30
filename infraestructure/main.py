@@ -52,10 +52,9 @@ def main():
     application(database.PRIVATE_IP_ADDRESS)
 
     # Frontend Application
-    frontend_outway.elastic_ip.get_ip()
     frontend = Frontend(nv_aws_client, nv_ec2_client, nv_elb_client, nv_as_client, ohio_aws_client, frontend_vpc_obj, frontend_public_subnet, frontend_private_subnet)
     frontend.second_public_subnet = frontend_vpc.second_public_subnet
-    frontend(frontend_outway.elastic_ip.ip)
+    frontend()
 
 
 

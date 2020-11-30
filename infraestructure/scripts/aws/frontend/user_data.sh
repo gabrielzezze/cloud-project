@@ -24,16 +24,7 @@ sudo apt install docker-ce docker-ce-cli containerd.io -y
 sudo docker pull caddy
 
 # Run application serving container.
-sudo docker run -d -p 8080:80 \
-    -v /home/ubuntu/applications/frontend/build/:/usr/share/caddy/ \
-    -v caddy_data:/data \
-    --name frontend-serving \
-    caddy
+sudo docker run -d -p 8080:80 -v /home/ubuntu/applications/frontend/build/:/usr/share/caddy/ -v caddy_data:/data --name frontend-serving caddy
 
 # Create and run the reverse proxy container.
-sudo docker run -d -p 80:80 \
--v /home/ubuntu/Caddyfile:/etc/caddy/Caddyfile \
--v /home/ubuntu/caddy_data:/data \
---name=frontend-caddy-reverse-proxy \
---network=host \
-caddy
+sudo docker run -d -p 80:80 -v /home/ubuntu/Caddyfile:/etc/caddy/Caddyfile -v /home/ubuntu/caddy_data:/data --name=frontend-caddy-reverse-proxy --network=host caddy

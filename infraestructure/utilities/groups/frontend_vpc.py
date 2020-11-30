@@ -33,7 +33,7 @@ class FrontendVPC():
         )
         route_table_id = res.get('RouteTables', [{}])[0].get('RouteTableId', None)
         if route_table_id:
-            frontend_public_route_table = self.ec2_client.RouteTable(route_table_id)
+            frontend_public_route_table = self.ec2_resource.RouteTable(route_table_id)
             frontend_public_route_table.associate_with_subnet(
                     SubnetId=self.second_public_subnet.id
                 )

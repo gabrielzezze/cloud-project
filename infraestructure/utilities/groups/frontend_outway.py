@@ -35,8 +35,8 @@ class FrontendOutway():
         self.security_group = SecurityGroup(self.ec2_client, self.ec2_resource, sg_name, self.vpc.id)
 
         # Elastic IP
-        elastic_ip_name = get_frontend_outway_elastic_ip_name()
-        self.elastic_ip = ElasticIP(self.ec2_client, elastic_ip_name)
+        # elastic_ip_name = get_frontend_outway_elastic_ip_name()
+        # self.elastic_ip = ElasticIP(self.ec2_client, elastic_ip_name)
 
         # VPN Keys
         self.keys = Keys()
@@ -83,20 +83,20 @@ class FrontendOutway():
                 self.network_interface_id = network_interfaces[0].id
                 network_interfaces[0].modify_attribute(SourceDestCheck={ 'Value': False })
 
-    def _handle_elastic_ip_association(self):
-        instance_id = self.ec2.id
+    # def _handle_elastic_ip_association(self):
+    #     instance_id = self.ec2.id
 
-        if instance_id is not None:
-            self.ec2_client.associate_address(
-                InstanceId   = instance_id,
-                AllocationId = self.elastic_ip.allocation_id
-            )
+    #     if instance_id is not None:
+    #         self.ec2_client.associate_address(
+    #             InstanceId   = instance_id,
+    #             AllocationId = self.elastic_ip.allocation_id
+    #         )
     
-    def _handle_elastic_ip_creation(self):
-        self.elastic_ip.get_ip()
+    # def _handle_elastic_ip_creation(self):
+    #     self.elastic_ip.get_ip()
 
-        if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
-            self.elastic_ip.create()
+    #     if (self.elastic_ip.ip is None or self.elastic_ip.allocation_id is None):
+    #         self.elastic_ip.create()
 
 
 
@@ -116,9 +116,9 @@ class FrontendOutway():
         running_waiter = self.ec2_client.get_waiter('instance_running')
         running_waiter.wait(InstanceIds=[self.ec2.id])
 
-        print('Creating Elastic IP if needed...')
-        self._handle_elastic_ip_creation()
-        print('Allocating Elastic IP...')
-        self._handle_elastic_ip_association()
+        # print('Creating Elastic IP if needed...')
+        # self._handle_elastic_ip_creation()
+        # print('Allocating Elastic IP...')
+        # self._handle_elastic_ip_association()
 
         print('Done :) \n')
