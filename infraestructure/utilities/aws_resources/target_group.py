@@ -5,10 +5,13 @@ class TargetGroup():
         self.group = group
 
     def _get_arn_by_name(self):
-        tgs = self.elb_client.describe_target_groups(
-            Names=[self.name]
-        )
-        self.arn = tgs.get('TargetGroups', [{}])[0].get('TargetGroupArn', None)
+        try:
+            tgs = self.elb_client.describe_target_groups(
+                Names=[self.name]
+            )
+            self.arn = tgs.get('TargetGroups', [{}])[0].get('TargetGroupArn', None)
+        except Exception as e:
+            print('[ Error ] Deleting Target group, Target Group not found...')
 
     def delete(self):
         self._get_arn_by_name()

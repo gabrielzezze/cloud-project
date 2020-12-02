@@ -91,7 +91,7 @@ class FrontendVPC():
             self.public_subnet = self.vpc.public_subnet
             self.vpc = self.vpc.vpc
 
-            return self.vpc, self.vpc.public_subnet, self.vpc.private_subnet
+            return self.vpc, self.public_subnet, self.private_subnet
 
         else:
             vpc_id = existing_vpc.get('VpcId', None)

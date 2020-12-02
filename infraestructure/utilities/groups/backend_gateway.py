@@ -24,7 +24,7 @@ class BackendGateway():
             os.path.dirname(__file__), 
             '../../scripts/aws/backend_gateway/user_data.sh'
         )
-        self.PRIVATE_IP_ADDRESS = '14.0.0.20'
+        self.PRIVATE_IP_ADDRESS = '14.0.0.30'
 
         self._prepare_resources()
         self.keys()
