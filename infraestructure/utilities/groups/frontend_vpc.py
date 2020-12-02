@@ -20,6 +20,7 @@ class FrontendVPC():
         self.second_public_subnet.get(self.ec2_client)
         if self.second_public_subnet.id is None:
             self.second_public_subnet.create(self.vpc.id, 'us-east-1b')
+            self.second_public_subnet.set_auto_assign_ipv4_ips(self.ec2_client)
         
         res = self.ec2_client.describe_route_tables(
             Filters=[
